@@ -1,0 +1,115 @@
+`timescale 1ns / 1ps
+
+
+
+module jump_display(
+    input clk, // 100MHz
+    input btnu_debounced,
+    input btnd_debounced,
+    output reg [3:0] an, // corrected bit size
+    output reg [6:0] seg );
+    
+
+reg [1:0] state = 0; // 2-bit state for 4 states (0 to 3)
+reg [31:0] counter = 0;
+reg flag = 0;
+reg [31:0] timer = 0;
+reg [1:0] state_D = 0; // 2-bit state for 4 states (0 to 3)
+reg [31:0] counter_D = 0;
+reg flag_D = 0;
+reg [31:0] timer_D = 0;
+
+
+
+always @ (posedge clk) 
+
+  begin
+  
+  // UP button logic
+   if ( btnu_debounced   && timer < 15000000 && !flag)
+   begin 
+  
+   timer <= 0; // reset timer variable each time btnu is pressed
+   flag <= 1;
+   
+   end
+    
+   
+    timer <= (flag && timer < 15000000) ? timer + 1: timer; // timer increases till 50000000 if btnu is pressed before
+    
+    
+     if (timer < 15000000 && flag) begin // need to add flag condition
+
+  
+     counter <= (counter >= 62500) ? 0 : counter + 1; // counter reaches 0 once every 0.0025 seconds
+
+     state <= (counter == 0) ? state + 1 : state; // 00 --> 01 --> 10 --> 11;
+  
+     case (state) // more neat than if statements
+ 
+     0: begin an <= 4'b0111; seg <= 7'b1100001; end // J 0011110 --> 1100001
+     1: begin an <= 4'b1011; seg <= 7'b1000001; end // U 0111110 --> 1000001
+     2: begin an <= 4'b1101; seg <= 7'b1001000; end // M (upside down U) 0110111 --> 1001000
+     3: begin an <= 4'b1110; seg <= 7'b0001100; end // P 1110011 --> 0001100
+     
+     endcase
+    
+   end
+   
+  
+   if (timer >= 15000000)
+   begin // may need to update condition
+    flag <= 0;  // reset to 0
+    timer <= 0; // reset to 0
+    an <= 4'b1111;
+    seg <= 7'b1111111;
+    
+   end
+   
+   
+   // DOWN btn logic
+    if ( btnd_debounced  && timer_D < 15000000 && !flag_D)
+     begin 
+    
+     timer_D <= 0; // reset timer variable each time btnu is pressed
+     flag_D <= 1;
+     
+     end
+      
+     
+      timer_D <= (flag_D && timer_D < 15000000) ? timer_D + 1: timer_D; // timer increases till 50000000 if btnu is pressed before
+      
+      
+       if (timer_D < 15000000 && flag_D) begin // need to add flag condition
+  
+    
+       counter_D <= (counter_D >= 62500) ? 0 : counter_D + 1; // counter reaches 0 once every 0.0025 seconds
+  
+       state_D <= (counter_D == 0) ? state_D + 1 : state_D; // 00 --> 01 --> 10 --> 11;
+    
+       case (state_D) // more neat than if statements
+   
+       0: begin an <= 4'b0111; seg <= 7'b0000000; end // B 1111111 --> 0000000
+       1: begin an <= 4'b1011; seg <= 7'b0000110; end // E 1111001 --> 0000110
+       2: begin an <= 4'b1101; seg <= 7'b1001000; end // N (upside down U) 0110111 --> 1001000
+       3: begin an <= 4'b1110; seg <= 7'b1000000; end // D 0111111 --> 1000000
+       
+       endcase
+      
+     end
+     
+    
+     if (timer_D >= 15000000)
+     begin // may need to update condition
+     
+      flag_D <= 0;  // reset to 0
+      timer_D <= 0; // reset to 0
+      
+      an <= 4'b1111;
+      seg <= 7'b1111111;
+       
+     end
+
+   
+  end
+ endmodule
