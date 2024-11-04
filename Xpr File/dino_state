@@ -1,0 +1,51 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 03.11.2024 17:18:30
+// Design Name: 
+// Module Name: dino_box
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
+
+
+module dino_box(
+    input clk,
+    input [6:0] dino_x,
+    input [5:0] dino_y,
+    input dino_state,
+    output reg [5:0] dino_top,
+    output reg [5:0] dino_bot,
+    output reg [6:0] dino_left,
+    output reg [6:0] dino_right
+    );
+    parameter standing_dino_width = 21;
+    parameter standing_dino_height = 22;
+    parameter ducking_dino_width = 20;
+    parameter ducking_dino_height = 13;
+    always @ (clk) begin 
+    if (dino_state == 0) begin
+        dino_top <= dino_y;
+        dino_bot <= dino_y + standing_dino_height;
+        dino_left <= dino_x;
+        dino_right <= dino_x + standing_dino_width;
+    end
+    else if (dino_state == 1) begin
+        dino_top <= dino_y;
+        dino_bot <= dino_y + ducking_dino_height;
+        dino_left <= dino_x;
+        dino_right <= dino_x + ducking_dino_width;
+    end
+end
+endmodule
