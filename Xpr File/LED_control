@@ -1,0 +1,91 @@
+`timescale 1ns / 1ps
+
+
+module LED_control(
+    input clk, // input a 1 Hz clock
+    output reg [15:0] LED = 16'b1111111111111111
+    );
+    
+    reg [31:0] state = 0;
+    reg direction = 1;
+    
+    always @ (posedge clk)
+    begin
+       
+       if (direction) begin
+       
+          if (state == 16)
+          begin
+             direction <= 0;
+          end
+          
+          state <= state + 1;
+       
+       
+       end
+       
+       else if (!direction) begin
+          
+          if (state == 1)
+          begin
+             direction <= 1;
+          end
+             
+          
+          state <= state - 1;
+       
+       
+       
+       end
+       
+       
+       
+       
+       if (state == 1)
+           LED <= 16'b1111111111111110;
+       if (state == 2)
+           LED <= 16'b1111111111111101;
+       if (state == 3)
+           LED <= 16'b1111111111111011;  
+       if (state == 4)
+           LED <= 16'b1111111111110111;       
+        
+       if (state == 5)
+           LED <= 16'b1111111111101111;  
+    
+       if (state == 6)
+           LED <= 16'b1111111111011111;
+           
+      if (state == 7)
+           LED <= 16'b1111111110111111;  
+     
+      if (state == 8)
+           LED <= 16'b1111111101111111;    
+           
+     if (state == 9)
+          LED <= 16'b1111111011111111;   
+     
+     if (state == 10)
+          LED <= 16'b1111110111111111;
+     
+     if (state == 11)
+          LED <= 16'b1111101111111111; 
+          
+     if (state == 12)
+          LED <= 16'b1111011111111111;
+          
+     if (state == 13)
+          LED <= 16'b1110111111111111;
+          
+     if (state == 14)
+         LED <=  16'b1101111111111111;
+         
+     if (state == 15)
+         LED <=  16'b1011111111111111;
+         
+     if (state == 16)
+         LED <=  16'b0111111111111111;
+      
+    end
+    
+endmodule
