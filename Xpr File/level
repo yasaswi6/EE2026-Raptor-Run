@@ -1,0 +1,201 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 02.11.2024 17:37:54
+// Design Name: 
+// Module Name: level
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
+
+
+module level(
+    input CLOCK,
+
+    input [6:0] x,
+    input [6:0] y,
+    input btnL,
+    input btnR,
+    output reg [15:0] oled_data = 0,
+    output reg [1:0] game_diff
+);
+
+    reg [6:0] difficulty_left = 46;
+    reg [1:0] numbers = 0;
+    reg [1:0] next_state_numbers = 0;
+
+    wire btnR_pulse;
+    wire btnL_pulse;
+    
+    reg prev_btnR_pulse = 0;
+    reg prev_btnL_pulse = 0;
+
+    wire btnR_pulse_event;
+    wire btnL_pulse_event;
+    
+    parameter BLACK = 16'b00000_000000_00000;
+
+    debounce_module db(.clk(CLOCK), .btn(btnR), .btn_stable(btnR_pulse));
+    debounce_module db2(.clk(CLOCK), .btn(btnL), .btn_stable(btnL_pulse));
+
+    // Edge detection for btnR and btnL pulses
+    assign btnR_pulse_event = btnR_pulse && !prev_btnR_pulse;
+    assign btnL_pulse_event = btnL_pulse && !prev_btnL_pulse;
+    
+    
+    wire clk_10hz;
+    reg [31:0]count = 0;
+    improved_slow_clk flexi_clock2(.basys_clock(CLOCK), .m(3999999), .signal(clk_10hz));
+    
+    always@(posedge clk_10hz) 
+                begin
+   
+                  count <= count + 1;
+                  
+                end
+
+    always @(posedge CLOCK) begin
+  
+        if (count>5) begin
+        // Update previous pulse states
+        prev_btnR_pulse <= btnR_pulse;
+                        prev_btnL_pulse <= btnL_pulse;
+
+                // State update on detected button press events
+                if (btnR_pulse_event) begin
+                    next_state_numbers <= numbers + 1;
+                end else if (btnL_pulse_event) begin
+                    next_state_numbers <= numbers - 1;
+                end
+        
+                // Apply state change
+                numbers <= next_state_numbers;
+        
+                // Display logic (keeping original design with minor adjustments)
+                if (x >= difficulty_left && x <= difficulty_left + 44 && y >=32 && y <= 62) begin
+                    if (x >= difficulty_left && x <= difficulty_left + 37 && y >=35 && y <= 57) begin
+                        oled_data <= 16'b11111_111101_00000;
+                        
+                        //////////////////////arrow btn ///////////////////////////
+                           if ((x == difficulty_left + 7 || x == difficulty_left + 30)  && y ==40) begin
+                               oled_data <= BLACK;
+                           end
+                           else if (((x >= difficulty_left + 6 && x <= difficulty_left + 7) || (x >= difficulty_left + 30 &&  x <= difficulty_left + 31 ))  && y ==41) begin
+                               oled_data <= BLACK;
+                           end
+                           else if (((x >= difficulty_left + 5 && x <= difficulty_left + 7) || (x >= difficulty_left + 30 &&  x <= difficulty_left + 32 ))  && y ==42) begin
+                               oled_data <= BLACK;
+                           end
+                           else if (((x >= difficulty_left + 4 && x <= difficulty_left + 7) || (x >= difficulty_left + 30 &&  x <= difficulty_left + 33 ))  && y ==43) begin
+                               oled_data <= BLACK;
+                           end
+                           else if (((x >= difficulty_left + 5 && x <= difficulty_left + 7) || (x >= difficulty_left + 30 &&  x <= difficulty_left + 32 ))  && y ==44) begin
+                               oled_data <= BLACK;
+                           end
+                           else if (((x >= difficulty_left + 6 && x <= difficulty_left + 7) || (x >= difficulty_left + 30 &&  x <= difficulty_left + 31 ))  && y ==45) begin
+                               oled_data <= BLACK;
+                           end
+                           else if ((x == difficulty_left + 7 || x == difficulty_left + 30)  && y ==46) begin
+                               oled_data <= BLACK;
+                           end           
+                           /////////////////////arrow btn ^^^^^^^^^^^^^^////////////////
+                                       
+                        ////////////////////level///////////////////////////////
+                          else if ( (x== difficulty_left + 9 || x== difficulty_left + 13 || x== difficulty_left + 14 || x== difficulty_left + 15 || x== difficulty_left + 17 || x== difficulty_left + 21 || x== difficulty_left + 23 || x== difficulty_left + 24 || x== difficulty_left + 25 || x== difficulty_left + 27) && y == 52) begin
+                              oled_data <= BLACK;
+                          end         
+                          else if ( (x== difficulty_left + 9 || x== difficulty_left + 13 || x== difficulty_left + 17 || x== difficulty_left + 18 || x== difficulty_left + 20 || x== difficulty_left + 21 || x== difficulty_left + 23 || x== difficulty_left + 27) && y == 53) begin
+                              oled_data <= BLACK;
+                          end       
+                          else if ( (x== difficulty_left + 9 || x== difficulty_left + 13 || x== difficulty_left + 14 || x== difficulty_left + 15 || x== difficulty_left + 18 || x== difficulty_left + 20 || x== difficulty_left + 23 || x== difficulty_left + 24 || x== difficulty_left + 25 || x== difficulty_left + 27) && y ==54) begin
+                              oled_data <= BLACK;
+                          end  
+                          else if ( (x== difficulty_left + 9 || x== difficulty_left + 13 || x== difficulty_left + 18 || x== difficulty_left + 20 || x== difficulty_left + 23 || x== difficulty_left + 27) && y == 55) begin
+                              oled_data <= BLACK;
+                          end    
+                          else if ( (x== difficulty_left + 9 || x== difficulty_left + 10 || x== difficulty_left + 11 || x== difficulty_left + 13 || x== difficulty_left + 14 || x== difficulty_left + 15 || x== difficulty_left + 18 || x== difficulty_left + 19 || x== difficulty_left + 20 || x== difficulty_left + 23 || x== difficulty_left + 24 || x== difficulty_left + 25 || x== difficulty_left + 27 || x== difficulty_left + 28 || x== difficulty_left + 29) && y ==56) begin
+                              oled_data <= BLACK;
+                          end    
+                          //////////////level ^^^^^^^^^^ ///////////////////////
+        
+                        // Number display logic (updated to ensure numbers align with state)
+                        else if (x >= difficulty_left + 14 && x <= difficulty_left + 24 && y >= 36 && y <= 49) begin
+                            case (numbers)
+                                2'b00: begin
+                                    game_diff <= numbers;
+                                     if ( x>= difficulty_left + 18 && x<=difficulty_left + 19 && y >=39 && y <= 47)begin
+                                                                       oled_data <= BLACK;
+                                                                   end
+                                end
+                                2'b01: begin
+                                    game_diff <= numbers;
+                                    if ( x>= difficulty_left + 17 && x<=difficulty_left + 21 && y >=39 && y <= 40)begin
+                                        oled_data <= BLACK;
+                                    end
+                                    else if ( x>= difficulty_left + 20 && x<=difficulty_left + 21 && y >=41 && y <= 42)begin
+                                        oled_data <= BLACK;
+                                    end
+                                    else if ( x>= difficulty_left + 17 && x<=difficulty_left + 21 && y >=43 && y <= 44)begin
+                                        oled_data <= BLACK;
+                                    end
+                                    else if ( x>= difficulty_left + 17 && x<=difficulty_left + 18 && y >=45 && y <= 46)begin
+                                        oled_data <= BLACK;
+                                    end
+                                    else if ( x>= difficulty_left + 17 && x<=difficulty_left + 21 && y >=47 && y <= 48)begin
+                                        oled_data <= BLACK;
+                                    end
+                                end
+                                2'b10: begin
+                                    game_diff <= numbers;
+                                     if ( x>= difficulty_left + 17 && x<=difficulty_left + 21 && y >=39 && y <= 40)begin
+                                           oled_data <= BLACK;
+                                       end
+                                       else if ( x>= difficulty_left + 20 && x<=difficulty_left + 21 && y >=41 && y <= 42)begin
+                                           oled_data <= BLACK;
+                                       end
+                                       else if ( x>= difficulty_left + 17 && x<=difficulty_left + 21 && y >=43 && y <= 44)begin
+                                           oled_data <= BLACK;
+                                       end
+                                       else if ( x>= difficulty_left + 20 && x<=difficulty_left + 21 && y >=45 && y <= 46)begin
+                                           oled_data <= BLACK;
+                                       end
+                                       else if ( x>= difficulty_left + 17 && x<=difficulty_left + 21 && y >=47 && y <= 48)begin
+                                           oled_data <= BLACK;
+                                       end
+                                end
+                                2'b11: begin
+                                    game_diff <= numbers;
+                                     if ( ((x>= difficulty_left + 17 && x<=difficulty_left + 18) || (x>= difficulty_left + 21 && x<=difficulty_left + 22)) && y >=39 && y <= 42)begin
+                                           oled_data <= BLACK;
+                                       end
+                                       else if ( x>= difficulty_left + 17 && x<=difficulty_left + 22 && y >=43 && y <= 44)begin
+                                           oled_data <= BLACK;
+                                       end
+                                       else if ( x>= difficulty_left + 21 && x<=difficulty_left + 22 && y >=45 && y <= 48)begin
+                                           oled_data <= BLACK;
+                                       end
+                                end
+                            endcase
+                        end
+                    end else begin
+                        oled_data <= 16'b11111_111111_11111;
+                    end
+                end
+            end
+            else begin
+                oled_data <= 16'b11111_111111_11111;
+            end
+        
+        end
+endmodule
