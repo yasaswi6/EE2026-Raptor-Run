@@ -1,0 +1,61 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 03.11.2024 15:56:13
+// Design Name: 
+// Module Name: collision_logic
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
+
+
+module collision_logic(
+    input clk,
+    input start,
+    input [6:0] dino_left,
+    input [6:0] dino_right,
+    input [5:0] dino_top,
+    input [5:0] dino_bot,
+    input [6:0] obs_left,
+    input [6:0] obs_right,
+    input [5:0] obs_top,
+    input [5:0] obs_bot,
+    input [6:0] obs_left2,
+    input [6:0] obs_right2,
+    input [5:0] obs_top2,
+    input [5:0] obs_bot2,
+    output reg hit 
+);
+    reg hit_obs1 = 0;
+    reg hit_obs2 = 0;
+
+    always @(posedge clk) begin
+        if (!start) begin
+            hit_obs1 <= 0;
+            hit_obs2 <= 0;
+            hit <= 0;
+        end else begin
+            // Check collision for the first obstacle
+            hit_obs1 <= (dino_right >= obs_left && dino_left <= obs_right &&
+                         dino_bot >= obs_top && dino_top <= obs_bot);
+
+            // Check collision for the second obstacle
+            hit_obs2 <= (dino_right >= obs_left2 && dino_left <= obs_right2 &&
+                         dino_bot >= obs_top2 && dino_top <= obs_bot2);
+            
+            // Update the hit output if either obstacle is hit
+            hit <= hit_obs1 || hit_obs2;
+        end
+    end
+endmodule
