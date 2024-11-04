@@ -1,0 +1,202 @@
+`timescale 1ns / 1ps
+
+module dino_move_horizontally (
+
+    input clk, // 150 Hz, can change
+    input btnr_pressed, //  input is debounced btnr signal; can it also be undebounced?
+    input btnl_pressed, //  input is debounced btnl signal; can it also be undebounced?
+    input btnd_pressed, //  input is debounced btnd signal; can it also be undebounced?
+    input btnc_pressed, //  input is debounced btnc signal; can it also be undebounced?
+    input start,
+    output reg [6:0] dino_x = 10
+
+    );
+    
+    reg reset;
+    
+
+    reg [31:0] move_left_count = 0; 
+    reg [31:0] continuous_press_left = 0;
+    
+    reg [31:0] move_right_count = 0; 
+    reg [31:0] continuous_press_right = 0;
+   
+    reg skid_right = 0;
+    reg skid_left = 0;
+    
+    parameter LEFT_LIMIT = 0; // correct
+    parameter RIGHT_LIMIT = 67; // correct
+    
+    parameter LEFT_SKID_LIMIT = 5; // 5
+    parameter RIGHT_SKID_LIMIT = 5;// 5
+    
+    parameter CONTINUOUS_LEFT_PRESS_LIMIT = 5;// 5
+    parameter CONTINUOUS_RIGHT_PRESS_LIMIT = 5;// 5
+    
+//    reg pb_btnr_past = 0; // KIV
+//    reg pb_btnl_past = 0; // KIV
+
+//    reg [6:0] max_jump_count = 15;
+//    reg [7:0] double_tap_counter = 0;
+    
+    always @ (posedge clk)
+    begin
+    
+    // assumptions: user will not press btnl & btnr buttons simultanously
+    
+//      if (reset)
+//      begin
+////        dino_is_moving_left <= 0;
+////        dino_is_moving_right <= 0;
+//        dino_x <= dino_x; // at reset, dino_x is unchanged as dino is stationary
+////        move_left_count <= 0;
+////        move_right_count <= 0;
+//        reset <= 0; // to exit reset block immediately after reaching here
+
+//      end
+      
+//      // right motion logic
+//      if (btnr_pressed && !btnu_pressed)
+//      begin
+//          dino_x <= (dino_x < RIGHT_LIMIT) ? dino_x : dino_x + 1;
+//      end
+      
+//      else if (!btnr_pressed)
+//      begin
+//          reset <= 1;
+//      end
+      
+      // left motion logic
+      if( start) begin
+      if (btnl_pressed && !btnr_pressed && !btnd_pressed && !btnc_pressed)
+      begin 
+          dino_x <= (dino_x > LEFT_LIMIT) ? dino_x - 1 : dino_x;
+ 
+      end
+      
+      // right motion logic
+      
+      else if (btnr_pressed && !btnl_pressed && !btnd_pressed && !btnc_pressed)
+      begin
+          dino_x <= (dino_x < RIGHT_LIMIT) ? dino_x + 1 : dino_x;
+       
+      end
+      
+      // to remove bugs:
+      
+      else if (btnr_pressed && btnl_pressed)
+      begin
+         dino_x <= dino_x; // no change in dino_x
+      
+      end
+      
+      // Right skid: If right and center are pressed, increment the continuous_press_right counter.
+          if (btnr_pressed && btnc_pressed && !btnd_pressed && !btnl_pressed) begin
+              continuous_press_right <= (continuous_press_right < CONTINUOUS_RIGHT_PRESS_LIMIT) ? continuous_press_right + 1 : continuous_press_right;
+              skid_right <= (continuous_press_right < CONTINUOUS_RIGHT_PRESS_LIMIT) ? 1 : 0;
+          end
+          else if (!btnr_pressed || !btnc_pressed) begin
+              // Reset when either btnr or btnc is released
+              continuous_press_right <= 0;
+              skid_right <= 0;
+          end
+      
+          // Left skid: If left and center are pressed, increment the continuous_press_left counter.
+          if (btnl_pressed && btnc_pressed && !btnd_pressed && !btnr_pressed) begin
+              continuous_press_left <= (continuous_press_left < CONTINUOUS_LEFT_PRESS_LIMIT) ? continuous_press_left + 1 : continuous_press_left;
+              skid_left <= (continuous_press_left < CONTINUOUS_LEFT_PRESS_LIMIT) ? 1 : 0;
+          end
+          else if (!btnl_pressed || !btnc_pressed) begin
+              // Reset when either btnl or btnc is released
+              continuous_press_left <= 0;
+              skid_left <= 0;
+          end
+      
+          // Move right if skid_right is 1
+          if (skid_right) begin
+              move_right_count <= (move_right_count < RIGHT_SKID_LIMIT) ? move_right_count + 1: move_right_count;
+
+              dino_x <= (move_right_count < RIGHT_SKID_LIMIT && dino_x < RIGHT_LIMIT) ? dino_x + 1 : dino_x;
+
+              skid_right <= (move_right_count < RIGHT_SKID_LIMIT) ? 1 : 0;
+          end
+          else if (!skid_right) begin
+              move_right_count <= 0;
+          end
+      
+          // Move left if skid_left is 1
+          if (skid_left) begin
+              move_left_count <= (move_left_count < LEFT_SKID_LIMIT) ? move_left_count + 1: move_left_count;
+
+              dino_x <= (move_left_count < LEFT_SKID_LIMIT && dino_x > LEFT_LIMIT) ? dino_x - 1: dino_x; 
+
+              skid_left <= (move_left_count < LEFT_SKID_LIMIT) ? 1 : 0;
+          end
+          else if (!skid_left) begin
+              move_left_count <= 0;
+          end
+          end
+          
+          else begin
+            dino_x <= 10;
+          end
+          
+          
+      end
+      
+    
+
+    
+endmodule
+
+//  // logic for right dino skidding mechanics:
+//      // Think of mechanism to prevent continuous dino skidding when both btnc and btnr is pressed
+//      else if (btnr_pressed && btnc_pressed && !btnd_pressed && !btnl_pressed)
+//      begin
+//         continuous_press_right <= (continuous_press_right <= CONTINUOUS_RIGHT_PRESS_LIMIT) ? continuous_press_right + 1 : continuous_press_right;
+//         skid_right <= (continuous_press_right <= CONTINUOUS_RIGHT_PRESS_LIMIT) ? 1 : 0;
+//      end
+      
+//      else if (!btnr_pressed || !btnc_pressed)
+//      begin
+//         continuous_press_right <= 0; // reset counter
+//      end
+         
+      
+//      else if (btnl_pressed && btnc_pressed && !btnd_pressed && !btnr_pressed)
+//      begin
+//         continuous_press_left <= (continuous_press_left <= CONTINUOUS_LEFT_PRESS_LIMIT) ? continuous_press_left + 1 : continuous_press_left;
+//         skid_left <= (continuous_press_left <= CONTINUOUS_LEFT_PRESS_LIMIT) ? 1 : 0;
+//      end
+      
+//      else if (!btnl_pressed || !btnc_pressed)
+//      begin
+//         continuous_press_left <= 0; // reset counter
+//      end
+      
+      
+//      if (skid_right)
+//      begin
+//        move_right_count <= (move_right_count <= RIGHT_SKID_LIMIT) ? move_right_count + 1: move_right_count;
+//        dino_x <= (move_right_count <= RIGHT_SKID_LIMIT && dino_x < RIGHT_LIMIT) ? dino_x + 1 : dino_x; 
+//        skid_right <= (move_right_count <= RIGHT_SKID_LIMIT) ? 1 : 0 ;
+//      end
+      
+//      else if (!skid_right)
+//      begin
+//         move_right_count <= 0; // reset this counter --> impt step!!!
+//      end
+      
+//      if (skid_left)
+//      begin
+//              move_left_count <= (move_left_count <= LEFT_SKID_LIMIT) ? move_left_count + 1: move_left_count;
+//              dino_x <= (move_left_count <= LEFT_SKID_LIMIT && dino_x > LEFT_LIMIT) ? dino_x - 1 : dino_x; 
+//              skid_left <= (move_left_count <= LEFT_SKID_LIMIT) ? 1 : 0 ;
+//      end
+            
+//      else if (!skid_left)
+//      begin
+//          move_left_count <= 0; // reset this counter --> impt step!!!
+//      end
+     
+   
