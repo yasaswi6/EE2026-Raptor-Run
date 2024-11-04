@@ -1,0 +1,251 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 02.11.2024 15:20:50
+// Design Name: 
+// Module Name: obstacle_move
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
+
+
+module obstacle_movement(
+input clk,
+input [6:0]x,
+input [5:0]y,
+output reg [6:0] obs_left,
+output reg [6:0] obs_left2,
+output reg [6:0] obs_right,
+output reg [6:0] obs_right2,
+output reg [5:0] obs_top,
+output reg [5:0] obs_top2,
+output reg [5:0] obs_bot,
+output reg [5:0] obs_bot2,
+input [3:0] game_speed,
+input start,
+output reg [15:0] oled,
+output reg speed_increase
+);
+ 
+parameter initial_cactus_x_left = 96;
+parameter initial_cactus_x_right = 107;
+parameter initial_cactus_y_top = 47;
+parameter initial_cactus_y_bot = 59;
+parameter min_distance = 55;
+
+
+reg [1:0] state = 2'b00;
+reg [1:0] state2 = 2'b00;
+reg [1:0] new_state = 2'b00;
+reg [1:0] new_state2 = 2'b00;
+reg bird_state = 0;
+reg second_move = 0;
+reg [15:0] cycle = 1;
+reg [3:0] buffered_game_speed = 1;
+reg [6:0] x_left;
+reg [6:0] x_left2;
+reg [6:0] x_right;
+reg [6:0] x_right2;
+reg [5:0] y_top;
+reg [5:0] y_top2;
+reg [5:0] y_bot;
+reg [5:0] y_bot2;
+
+wire [1:0] random_state;
+wire [1:0] random_state2;
+wire [3:0] random_interval;
+
+wire clk_20Hz;
+wire clk_25MHz;
+wire clk_10Hz;
+wire clk_02Hz;
+
+wire [15:0] background_oled;
+wire [15:0] obstacle_oled;
+wire [15:0] obstacle_oled2;
+
+improved_slow_clk my_25MHz (.basys_clock(clk), .m(1), .signal(clk_25MHz));
+improved_slow_clk my_20Hz (.basys_clock(clk), .m(2499999), .signal(clk_20Hz));
+improved_slow_clk my_10Hz (.basys_clock(clk), .m(4999999), .signal(clk_10Hz));
+improved_slow_clk my_02Hz (.basys_clock(clk), .m(249999999), .signal(clk_02Hz));
+
+lfsr_random random_st(.clk(clk_02Hz),.reset(0),.random_number(random_state));
+lfsr_random_2 random_st2(.clk(clk_02Hz),.reset(0),.random_number(random_state2));
+lfsr_interval random_inter(.clk(clk_02Hz),.reset(0),.random_number(random_interval));
+
+obstacle_display obs1(.clk(clk_25MHz),.x(x),.y(y),.x_left(x_left),.x_right(x_right),.y_top(y_top),.y_bot(y_bot),.state(state),.bird_state(bird_state),.background_colour(background_oled),.oled(obstacle_oled));
+obstacle_display obs2(.clk(clk_25MHz),.x(x),.y(y),.x_left(x_left2),.x_right(x_right2),.y_top(y_top2),.y_bot(y_bot2),.state(state2),.bird_state(bird_state),.background_colour(background_oled),.oled(obstacle_oled2));
+background_display back(.clk(clk_25MHz),.oled_data (background_oled));
+
+always @(*) begin
+     if (obstacle_oled != background_oled) 
+         oled = obstacle_oled;          // Display obstacle_oled if it is occupying the pixel
+     else if (obstacle_oled2 != background_oled)
+         oled = obstacle_oled2;         // Display obstacle_oled2 if it is occupying the pixel and obstacle_oled is not
+     else begin
+         oled = background_oled;        // Default to background if neither obstacle is occupying the pixel
+     end
+ 
+ end
+ 
+ always@(posedge clk_25MHz) begin
+     obs_left <= x_left;
+     obs_right <= x_right;
+     obs_top <= y_top;
+     obs_bot <= y_bot;
+     obs_left2 <= x_left2;
+     obs_right2 <= x_right2;
+     obs_top2 <= y_top2;
+     obs_bot2 <= y_bot2;
+     end
+     
+   always @(posedge clk_10Hz) begin
+         if (!start) begin
+             buffered_game_speed <= 1;
+         end else begin
+             buffered_game_speed <= game_speed; // Buffer the game_speed value
+         end
+     end    
+    
+
+ 
+always @(posedge clk_10Hz) begin
+         if (!start) begin
+             // Reset logic
+             x_left <= 96;          
+             x_right <= 107;
+             y_top <= 47;
+             y_bot <= 59;
+             x_left2 <= 96;
+             x_right2 <= 107;
+             y_top2 <= 47;
+             y_bot2 <= 59;  
+             second_move <= 0;      
+             state <= 2'b00;        
+             state2 <= 2'b00;
+             cycle <= 0;       
+         end else begin
+             // Update cactus positions
+             x_left <= x_left - game_speed;
+             x_right <= x_right - game_speed;
+             
+             if (x_left2 < x_left) begin
+                x_right <= x_right;
+                x_left <= x_left;
+                end
+                
+             // Update second cactus
+             if ((x_left2 - x_left) > (min_distance + random_interval)) begin
+                 x_left2 <= x_left2 - game_speed;
+                 x_right2 <= x_right2 - game_speed;
+             end
+             
+                       if (x_left <= 0 | x_left > 120) begin
+                              new_state <= random_state; 
+                              case (new_state)
+                                 2'b00: begin
+                                     x_left <= 96;
+                                     x_right <= 107;
+                                     y_top <= 47;
+                                     y_bot <= 59;
+                                 end
+                                 2'b01: begin
+                                     x_left <= 96;
+                                     x_right <= 120;
+                                     y_top <= 47;
+                                     y_bot <= 59;
+                                 end
+                                 2'b10: begin
+                                     x_left <= 96;
+                                     x_right <= 107;
+                                     y_top <= 39;
+                                     y_bot <= 59;
+                                 end
+                                 2'b11: begin
+                                     x_left <= 96;
+                                     x_right <= 112;
+                                     y_top <= 20;//change
+                                     y_bot <= 33;//change
+                                 end
+                                 default: begin
+                                     x_left <= 96;
+                                     x_right <= 107;
+                                     y_top <= 47;
+                                     y_bot <= 59;
+                                 end
+                              endcase
+                              if (cycle == 5 | cycle == 15) begin
+                                 speed_increase <= 1;
+                              end
+                              else begin
+                                 speed_increase <= 0;
+                              end
+                              state <= new_state;
+                             
+                          end
+                          
+                          // Reset the second cactus
+                          if (x_left2 <= 0 | x_left2 > 120) begin
+                              new_state2 <= random_state2;      
+                              cycle = cycle + 1;
+                              case (new_state2)
+                              2'b00: begin
+                                 x_left2 <= 96;
+                                 x_right2 <= 107;
+                                 y_top2 <= 47;
+                                 y_bot2 <= 59;
+                              end
+                              2'b01: begin
+                                 x_left2 <= 96;
+                                 x_right2 <= 120;
+                                 y_top2 <= 47;
+                                 y_bot2 <= 59;
+                              end
+                              2'b10: begin
+                                 x_left2 <= 96;
+                                 x_right2 <= 107;
+                                 y_top2 <= 39;
+                                 y_bot2 <= 59;
+                              end
+                              2'b11: begin
+                                 x_left2 <= 96;
+                                 x_right2 <= 112;
+                                 y_top2 <= 20;//change
+                                 y_bot2 <= 33;//change
+                              end
+                              default: begin
+                                 x_left2 <= 96;
+                                 x_right2 <= 107;
+                                 y_top2 <= 46;
+                                 y_bot2 <= 59;
+                              end
+                          endcase
+                          state2 <= new_state2;
+     
+             // Assign positions to output variables
+             
+         end    
+     end
+     end
+     // Bird logic for animation
+     always @(posedge clk_10Hz) begin
+         if (!start) begin
+             bird_state <= 0; // Reset bird state
+         end else begin
+             if (state == 2'b11 || state2 == 2'b11) begin
+                 bird_state <= ~bird_state;
+             end
+         end
+     end
+endmodule
