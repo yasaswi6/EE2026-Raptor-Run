@@ -1,0 +1,541 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 02.11.2024 17:28:32
+// Design Name: 
+// Module Name: dino_menu2
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
+
+
+module dino_menu2(
+    input CLOCK,
+ 
+    input [6:0] x,
+    input [6:0] y,
+    input btnL,
+    input btnR,
+    output wire [15:0]oledddd_data,
+    output [1:0] game_diff
+    );
+    
+    parameter GREEN = 16'b 00000_111111_00000;
+    parameter WHITE = 16'b 11111_111111_11111;
+    parameter BLACK = 16'b 00000_000000_00000;
+    
+    wire out_25MHz;
+    reg [6:0]dino_y = 10;
+    reg [6:0]dino_x = 2;
+    parameter MOVE_DELAY = 31250;
+    reg [31:0]count = 0;
+    
+    
+    
+    
+        reg  [1:0]t_rex_running = 2'b00;
+        parameter t_rex_both_legs = 2'b01;
+        parameter t_rex_both_legs2 = 2'b00;
+        parameter t_rex_left_leg = 2'b10;
+        parameter t_rex_right_leg = 2'b11;
+        reg [1:0] next_state = 2'b00;
+        
+        
+       wire clk_1p5hz;
+       improved_slow_clk flexi_clock(.basys_clock(CLOCK), .m(19999999), .signal(clk_1p5hz));
+       improved_slow_clk clk_25MHz (.basys_clock(CLOCK), .m(32'd1), .signal(out_25MHz)); 
+        
+        
+       reg [6:0]fire_y_top = 17;
+       reg [6:0]fire_y_bottom = 29;
+       reg [6:0]fire_x_left = 50;
+       reg [6:0]fire_x_right = 49;
+       wire clk_10hz;
+       
+       
+       reg [6:0]difficulty_left = 46;
+       reg [1:0] numbers = 0;
+       reg [1:0]next_state_numbers = 0;
+       wire btnR_pulse = 0;
+       wire btnL_pulse = 0;
+       
+       reg prev_btnR_pulse = 0;
+       reg prev_btnL_pulse = 0;
+       
+       wire btnR_pulse_event;
+       wire btnL_pulse_event;
+       
+       // Edge detection for btnR and btnL pulses
+       assign btnR_pulse_event = btnR_pulse && !prev_btnR_pulse;
+       assign btnL_pulse_event = btnL_pulse && !prev_btnL_pulse;
+
+       
+       
+       improved_slow_clk flexi_clock2(.basys_clock(CLOCK), .m(3999999), .signal(clk_10hz));
+       debounce_module db(.clk(CLOCK), .btn(btnR), .btn_stable(btnR_pulse));
+       debounce_module db2(.clk(CLOCK), .btn(btnL), .btn_stable(btnL_pulse));
+       
+       
+       reg [15:0] oled_data = 0;
+       wire [15:0] oledd;
+       level pls(.CLOCK(CLOCK),.x(x),.y(y),.btnL(btnL),.btnR(btnR),.oled_data(oledd),.game_diff(game_diff));
+        assign oledddd_data = (x >= difficulty_left && x <= difficulty_left + 44 && y >=32 && y <= 62) ? oledd : oled_data;
+        
+       always@(posedge clk_10hz) 
+            begin
+              
+              fire_x_right <=  (fire_x_right == 67) ? 50 : fire_x_right + 1;
+              count <= count + 1;
+              
+            end
+    
+    
+    always@(posedge out_25MHz)begin
+    
+    
+    
+    
+    ////////////////////////////////////////  t-rex running   ///////////////////////////////////////////////
+    
+     if (x >= dino_x && x <= dino_x + 46 && y >= dino_y && y <= dino_y + 43) begin
+    
+        case(t_rex_running)
+        t_rex_both_legs2: begin  
+                            next_state = t_rex_both_legs; 
+                          end   
+        t_rex_both_legs: begin     
+                            next_state = t_rex_right_leg;
+                            if (x >= dino_x && x <= dino_x + 48 && y >= dino_y && y <= dino_y + 43) begin // T-Rex, represented as pixels
+                                case (y - dino_y)
+                    //                0: oled_data = (x - dino_x >= 8 && x - dino_x <= 14) ? BLACK : 0;
+                                    1: oled_data = (x - dino_x >= 27 && x - dino_x <= 42) ? BLACK : WHITE;
+                                    2: oled_data = (x - dino_x >= 27 && x - dino_x <= 42) ? BLACK : WHITE;
+                                    3: oled_data = (x - dino_x >= 27 && x - dino_x <= 42) ? BLACK: WHITE;
+                                    4: oled_data = (x - dino_x >= 24 && x - dino_x <=28 || (x - dino_x >= 31 && x - dino_x <=45)) ? BLACK : WHITE;
+                                    5: oled_data = (x - dino_x >= 24 && x - dino_x <=28 || (x - dino_x >= 31 && x - dino_x <=45)) ? BLACK : WHITE;
+                                    6: oled_data = (x - dino_x >= 24 && x - dino_x <=28 || (x - dino_x >= 31 && x - dino_x <=45)) ? BLACK : WHITE;
+                                    7: oled_data = (x - dino_x >= 24 && x - dino_x <=45) ? BLACK : WHITE;
+                                    8: oled_data = (x - dino_x >= 24 && x - dino_x <=45) ? BLACK : WHITE;
+                                    9: oled_data = (x - dino_x >= 24 && x - dino_x <=45) ? BLACK : WHITE;
+                                    10: oled_data = (x - dino_x >= 24 && x - dino_x <=45) ? BLACK : WHITE;
+                                    11: oled_data = (x - dino_x >= 24 && x - dino_x <=45) ? BLACK : WHITE;
+                                    12: oled_data = (x - dino_x >= 24 && x - dino_x <=45) ? BLACK : WHITE;
+                                    13: oled_data = (x - dino_x >= 24 && x - dino_x <=33) ? BLACK : WHITE;
+                                    14: oled_data = ((x - dino_x >= 3 && x - dino_x <= 4) || (x - dino_x >= 21 && x - dino_x <=33)) ? BLACK : WHITE;
+                                    15: oled_data = ((x - dino_x >= 3 && x - dino_x <= 4) || (x - dino_x >= 21 && x - dino_x <=41)) ? BLACK : WHITE;
+                                    16: oled_data = ((x - dino_x >= 3 && x - dino_x <= 4) || (x - dino_x >= 19 && x - dino_x <=41)) ? BLACK : WHITE;
+                                    17: oled_data = ((x - dino_x >= 3 && x - dino_x <= 6) || (x - dino_x >= 19 && x - dino_x <=31)) ? BLACK : WHITE;
+                                    18: oled_data = ((x - dino_x >= 3 && x - dino_x <= 6) || (x - dino_x >= 17 && x - dino_x <=31)) ? BLACK : WHITE;
+                                    19: oled_data = ((x - dino_x >= 3 && x - dino_x <= 8) || (x - dino_x >= 17 && x - dino_x <=36)) ? BLACK : WHITE;
+                                    20: oled_data = ((x - dino_x >= 3 && x - dino_x <= 8) || (x - dino_x >= 15 && x - dino_x <=36)) ? BLACK : WHITE;
+                                    21: oled_data = ((x - dino_x >= 3 && x - dino_x <= 11) || (x - dino_x >= 15 && x - dino_x <=31) || (x - dino_x >= 35 && x - dino_x <=36)) ? BLACK : WHITE;
+                                    22: oled_data = ((x - dino_x >= 3 && x - dino_x <= 31) || (x - dino_x >= 35 && x - dino_x <=36)) ? BLACK : WHITE;
+                                    23: oled_data = (x - dino_x >= 3 && x - dino_x <= 31) ? BLACK : WHITE;
+                                    24: oled_data = (x - dino_x >= 5 && x - dino_x <= 31) ? BLACK : WHITE;
+                                    25: oled_data = (x - dino_x >= 5 && x - dino_x <= 31) ? BLACK : WHITE;
+                                    26: oled_data = (x - dino_x >= 7 && x - dino_x <= 31) ? BLACK : WHITE;
+                                    27: oled_data = (x - dino_x >= 7 && x - dino_x <= 31) ? BLACK : WHITE;
+                                    28: oled_data = (x - dino_x >= 7 && x - dino_x <= 31) ? BLACK : WHITE;
+                                    29: oled_data = (x - dino_x >= 11 && x - dino_x <= 31) ? BLACK : WHITE;
+                                    30: oled_data = (x - dino_x >= 11 && x - dino_x <= 29) ? BLACK : WHITE;
+                                    31: oled_data = (x - dino_x >= 11 && x - dino_x <= 29) ? BLACK : WHITE;
+                                    32: oled_data = (x - dino_x >= 11 && x - dino_x <= 27) ? BLACK : WHITE;
+                                    33: oled_data = (x - dino_x >= 11 && x - dino_x <= 27) ? BLACK : WHITE;
+                                    34: oled_data = ((x - dino_x >= 11 && x - dino_x <= 19) || (x - dino_x >= 22 && x - dino_x <=25)) ? BLACK : WHITE;
+                                    35: oled_data = ((x - dino_x >= 13 && x - dino_x <= 19) || (x - dino_x >= 22 && x - dino_x <=25)) ? BLACK : WHITE;
+                                    36: oled_data = ((x - dino_x >= 13 && x - dino_x <= 19) || (x - dino_x >= 22 && x - dino_x <=25)) ? BLACK : WHITE;
+                                    37: oled_data = ((x - dino_x >= 13 && x - dino_x <= 17) || (x - dino_x >= 24 && x - dino_x <=25)) ? BLACK : WHITE;
+                                    38: oled_data = ((x - dino_x >= 13 && x - dino_x <= 17) || (x - dino_x >= 24 && x - dino_x <=25)) ? BLACK : WHITE;
+                                    39: oled_data = ((x - dino_x >= 13 && x - dino_x <= 17) || (x - dino_x >= 24 && x - dino_x <=25)) ? BLACK : WHITE;
+                                    40: oled_data = ((x - dino_x >= 13 && x - dino_x <= 14) || (x - dino_x >= 24 && x - dino_x <=25)) ? BLACK : WHITE;
+                                    41: oled_data = ((x - dino_x >= 13 && x - dino_x <= 14) || (x - dino_x >= 24 && x - dino_x <=25)) ? BLACK : WHITE;
+                                    42: oled_data = ((x - dino_x >= 13 && x - dino_x <= 17) || (x - dino_x >= 24 && x - dino_x <=28)) ? BLACK : WHITE;
+                                    43: oled_data = ((x - dino_x >= 13 && x - dino_x <= 17) || (x - dino_x >= 24 && x - dino_x <=28)) ? BLACK : WHITE;
+                                    
+                                    
+                                    
+                                    
+                                    default: oled_data = WHITE;
+                        endcase
+                        end
+                        end
+                                
+                    
+    
+        t_rex_left_leg: begin  
+                       
+                            next_state = t_rex_right_leg;
+                            if (x >= dino_x && x <= dino_x + 48 && y >= dino_y && y <= dino_y + 43) begin // T-Rex, represented as pixels
+                                case (y - dino_y)
+                    //                0: oled_data = (x - dino_x >= 8 && x - dino_x <= 14) ? BLACK : 0;
+                                    1: oled_data = (x - dino_x >= 27 && x - dino_x <= 42) ? BLACK : WHITE;
+                                    2: oled_data = (x - dino_x >= 27 && x - dino_x <= 42) ? BLACK : WHITE;
+                                    3: oled_data = (x - dino_x >= 27 && x - dino_x <= 42) ? BLACK: WHITE;
+                                    4: oled_data = (x - dino_x >= 24 && x - dino_x <=28 || (x - dino_x >= 31 && x - dino_x <=45)) ? BLACK : WHITE;
+                                    5: oled_data = (x - dino_x >= 24 && x - dino_x <=28 || (x - dino_x >= 31 && x - dino_x <=45)) ? BLACK : WHITE;
+                                    6: oled_data = (x - dino_x >= 24 && x - dino_x <=28 || (x - dino_x >= 31 && x - dino_x <=45)) ? BLACK : WHITE;
+                                    7: oled_data = (x - dino_x >= 24 && x - dino_x <=45) ? BLACK : WHITE;
+                                    8: oled_data = (x - dino_x >= 24 && x - dino_x <=45) ? BLACK : WHITE;
+                                    9: oled_data = (x - dino_x >= 24 && x - dino_x <=45) ? BLACK : WHITE;
+                                    10: oled_data = (x - dino_x >= 24 && x - dino_x <=45) ? BLACK : WHITE;
+                                    11: oled_data = (x - dino_x >= 24 && x - dino_x <=45) ? BLACK : WHITE;
+                                    12: oled_data = (x - dino_x >= 24 && x - dino_x <=45) ? BLACK : WHITE;
+                                    13: oled_data = (x - dino_x >= 24 && x - dino_x <=33) ? BLACK : WHITE;
+                                    14: oled_data = ((x - dino_x >= 3 && x - dino_x <= 4) || (x - dino_x >= 21 && x - dino_x <=33)) ? BLACK : WHITE;
+                                    15: oled_data = ((x - dino_x >= 3 && x - dino_x <= 4) || (x - dino_x >= 21 && x - dino_x <=41)) ? BLACK : WHITE;
+                                    16: oled_data = ((x - dino_x >= 3 && x - dino_x <= 4) || (x - dino_x >= 19 && x - dino_x <=41)) ? BLACK : WHITE;
+                                    17: oled_data = ((x - dino_x >= 3 && x - dino_x <= 6) || (x - dino_x >= 19 && x - dino_x <=31)) ? BLACK : WHITE;
+                                    18: oled_data = ((x - dino_x >= 3 && x - dino_x <= 6) || (x - dino_x >= 17 && x - dino_x <=31)) ? BLACK : WHITE;
+                                    19: oled_data = ((x - dino_x >= 3 && x - dino_x <= 8) || (x - dino_x >= 17 && x - dino_x <=36)) ? BLACK : WHITE;
+                                    20: oled_data = ((x - dino_x >= 3 && x - dino_x <= 8) || (x - dino_x >= 15 && x - dino_x <=36)) ? BLACK : WHITE;
+                                    21: oled_data = ((x - dino_x >= 3 && x - dino_x <= 11) || (x - dino_x >= 15 && x - dino_x <=31) || (x - dino_x >= 35 && x - dino_x <=36)) ? BLACK : WHITE;
+                                    22: oled_data = ((x - dino_x >= 3 && x - dino_x <= 31) || (x - dino_x >= 35 && x - dino_x <=36)) ? BLACK : WHITE;
+                                    23: oled_data = (x - dino_x >= 3 && x - dino_x <= 31) ? BLACK : WHITE;
+                                    24: oled_data = (x - dino_x >= 5 && x - dino_x <= 31) ? BLACK : WHITE;
+                                    25: oled_data = (x - dino_x >= 5 && x - dino_x <= 31) ? BLACK : WHITE;
+                                    26: oled_data = (x - dino_x >= 7 && x - dino_x <= 31) ? BLACK : WHITE;
+                                    27: oled_data = (x - dino_x >= 7 && x - dino_x <= 31) ? BLACK : WHITE;
+                                    28: oled_data = (x - dino_x >= 7 && x - dino_x <= 31) ? BLACK : WHITE;
+                                    29: oled_data = (x - dino_x >= 11 && x - dino_x <= 31) ? BLACK : WHITE;
+                                    30: oled_data = (x - dino_x >= 11 && x - dino_x <= 29) ? BLACK : WHITE;
+                                    31: oled_data = (x - dino_x >= 11 && x - dino_x <= 29) ? BLACK : WHITE;
+                                    32: oled_data = (x - dino_x >= 11 && x - dino_x <= 27) ? BLACK : WHITE;
+                                    33: oled_data = (x - dino_x >= 11 && x - dino_x <= 27) ? BLACK : WHITE;
+                                    34: oled_data = ((x - dino_x >= 11 && x - dino_x <= 19) || (x - dino_x >= 22 && x - dino_x <=25)) ? BLACK : WHITE;
+                                    35: oled_data = ((x - dino_x >= 13 && x - dino_x <= 19) || (x - dino_x >= 22 && x - dino_x <=25)) ? BLACK : WHITE;
+                                    36: oled_data = ((x - dino_x >= 13 && x - dino_x <= 19) || (x - dino_x >= 22 && x - dino_x <=25)) ? BLACK : WHITE;
+                                    37: oled_data = ((x - dino_x >= 13 && x - dino_x <= 17) || (x - dino_x >= 24 && x - dino_x <=25)) ? BLACK : WHITE;
+                                    38: oled_data = ((x - dino_x >= 13 && x - dino_x <= 17) || (x - dino_x >= 24 && x - dino_x <=28)) ? BLACK : WHITE;
+                                    39: oled_data = ((x - dino_x >= 13 && x - dino_x <= 17) || (x - dino_x >= 24 && x - dino_x <=28)) ? BLACK : WHITE;
+                                    40: oled_data = ((x - dino_x >= 13 && x - dino_x <= 14) ) ? BLACK : WHITE;
+                                    41: oled_data = ((x - dino_x >= 13 && x - dino_x <= 14) ) ? BLACK : WHITE;
+                                    42: oled_data = ((x - dino_x >= 13 && x - dino_x <= 17)) ? BLACK : WHITE;
+                                    43: oled_data = ((x - dino_x >= 13 && x - dino_x <= 17) ) ? BLACK : WHITE;
+                                    
+                                    
+                                    
+                                    
+                                    default: oled_data = WHITE;
+                        endcase
+                        
+                        end
+                        end
+
+
+        t_rex_right_leg: begin     
+                    
+                            next_state = t_rex_left_leg;
+                            if (x >= dino_x && x <= dino_x + 48 && y >= dino_y && y <= dino_y + 43) begin // T-Rex, represented as pixels
+                                case (y - dino_y)
+                    //                0: oled_data = (x - dino_x >= 8 && x - dino_x <= 14) ? BLACK : 0;
+                                    1: oled_data = (x - dino_x >= 27 && x - dino_x <= 42) ? BLACK : WHITE;
+                                    2: oled_data = (x - dino_x >= 27 && x - dino_x <= 42) ? BLACK : WHITE;
+                                    3: oled_data = (x - dino_x >= 27 && x - dino_x <= 42) ? BLACK: WHITE;
+                                    4: oled_data = (x - dino_x >= 24 && x - dino_x <=28 || (x - dino_x >= 31 && x - dino_x <=45)) ? BLACK : WHITE;
+                                    5: oled_data = (x - dino_x >= 24 && x - dino_x <=28 || (x - dino_x >= 31 && x - dino_x <=45)) ? BLACK : WHITE;
+                                    6: oled_data = (x - dino_x >= 24 && x - dino_x <=28 || (x - dino_x >= 31 && x - dino_x <=45)) ? BLACK : WHITE;
+                                    7: oled_data = (x - dino_x >= 24 && x - dino_x <=45) ? BLACK : WHITE;
+                                    8: oled_data = (x - dino_x >= 24 && x - dino_x <=45) ? BLACK : WHITE;
+                                    9: oled_data = (x - dino_x >= 24 && x - dino_x <=45) ? BLACK : WHITE;
+                                    10: oled_data = (x - dino_x >= 24 && x - dino_x <=45) ? BLACK : WHITE;
+                                    11: oled_data = (x - dino_x >= 24 && x - dino_x <=45) ? BLACK : WHITE;
+                                    12: oled_data = (x - dino_x >= 24 && x - dino_x <=45) ? BLACK : WHITE;
+                                    13: oled_data = (x - dino_x >= 24 && x - dino_x <=33) ? BLACK : WHITE;
+                                    14: oled_data = ((x - dino_x >= 3 && x - dino_x <= 4) || (x - dino_x >= 21 && x - dino_x <=33)) ? BLACK : WHITE;
+                                    15: oled_data = ((x - dino_x >= 3 && x - dino_x <= 4) || (x - dino_x >= 21 && x - dino_x <=41)) ? BLACK : WHITE;
+                                    16: oled_data = ((x - dino_x >= 3 && x - dino_x <= 4) || (x - dino_x >= 19 && x - dino_x <=41)) ? BLACK : WHITE;
+                                    17: oled_data = ((x - dino_x >= 3 && x - dino_x <= 6) || (x - dino_x >= 19 && x - dino_x <=31)) ? BLACK : WHITE;
+                                    18: oled_data = ((x - dino_x >= 3 && x - dino_x <= 6) || (x - dino_x >= 17 && x - dino_x <=31)) ? BLACK : WHITE;
+                                    19: oled_data = ((x - dino_x >= 3 && x - dino_x <= 8) || (x - dino_x >= 17 && x - dino_x <=36)) ? BLACK : WHITE;
+                                    20: oled_data = ((x - dino_x >= 3 && x - dino_x <= 8) || (x - dino_x >= 15 && x - dino_x <=36)) ? BLACK : WHITE;
+                                    21: oled_data = ((x - dino_x >= 3 && x - dino_x <= 11) || (x - dino_x >= 15 && x - dino_x <=31) || (x - dino_x >= 35 && x - dino_x <=36)) ? BLACK : WHITE;
+                                    22: oled_data = ((x - dino_x >= 3 && x - dino_x <= 31) || (x - dino_x >= 35 && x - dino_x <=36)) ? BLACK : WHITE;
+                                    23: oled_data = (x - dino_x >= 3 && x - dino_x <= 31) ? BLACK : WHITE;
+                                    24: oled_data = (x - dino_x >= 5 && x - dino_x <= 31) ? BLACK : WHITE;
+                                    25: oled_data = (x - dino_x >= 5 && x - dino_x <= 31) ? BLACK : WHITE;
+                                    26: oled_data = (x - dino_x >= 7 && x - dino_x <= 31) ? BLACK : WHITE;
+                                    27: oled_data = (x - dino_x >= 7 && x - dino_x <= 31) ? BLACK : WHITE;
+                                    28: oled_data = (x - dino_x >= 7 && x - dino_x <= 31) ? BLACK : WHITE;
+                                    29: oled_data = (x - dino_x >= 11 && x - dino_x <= 31) ? BLACK : WHITE;
+                                    30: oled_data = (x - dino_x >= 11 && x - dino_x <= 29) ? BLACK : WHITE;
+                                    31: oled_data = (x - dino_x >= 11 && x - dino_x <= 29) ? BLACK : WHITE;
+                                    32: oled_data = (x - dino_x >= 11 && x - dino_x <= 27) ? BLACK : WHITE;
+                                    33: oled_data = (x - dino_x >= 11 && x - dino_x <= 27) ? BLACK : WHITE;
+                                    34: oled_data = ((x - dino_x >= 11 && x - dino_x <= 19) || (x - dino_x >= 22 && x - dino_x <=25)) ? BLACK : WHITE;
+                                    35: oled_data = ((x - dino_x >= 13 && x - dino_x <= 19) || (x - dino_x >= 22 && x - dino_x <=25)) ? BLACK : WHITE;
+                                    36: oled_data = ((x - dino_x >= 13 && x - dino_x <= 19) || (x - dino_x >= 22 && x - dino_x <=25)) ? BLACK : WHITE;
+                                    37: oled_data = ((x - dino_x >= 13 && x - dino_x <= 14) || (x - dino_x >= 24 && x - dino_x <=25)) ? BLACK : WHITE;
+                                    38: oled_data = ((x - dino_x >= 13 && x - dino_x <= 17) || (x - dino_x >= 24 && x - dino_x <=25)) ? BLACK : WHITE;
+                                    39: oled_data = ((x - dino_x >= 13 && x - dino_x <= 17) || (x - dino_x >= 24 && x - dino_x <=25)) ? BLACK : WHITE;
+                                    40: oled_data = ((x - dino_x >= 24 && x - dino_x <=25)) ? BLACK : WHITE;
+                                    41: oled_data = ((x - dino_x >= 24 && x - dino_x <=25)) ? BLACK : WHITE;
+                                    42: oled_data = ((x - dino_x >= 24 && x - dino_x <=28)) ? BLACK : WHITE;
+                                    43: oled_data = ((x - dino_x >= 24 && x - dino_x <=28)) ? BLACK : WHITE;
+                                    
+                                    
+                                    
+                                    
+                                    default: oled_data <= WHITE;
+                        endcase
+                        end
+                        end
+    
+    
+    
+        endcase
+        
+        end
+        
+        
+        
+    ///////////////////////////////////////fire breathing/////////////////////////////////////////////////////
+        
+       if (count > 5) begin 
+       if (x >= fire_x_left && x <= fire_x_left + 18 && y >=11 && y <= 28) begin
+       if ((x >= fire_x_left && x<= fire_x_right && y >= 12 && y <= 12)) begin
+                    if (((x >= fire_x_left ) && (x<= fire_x_left + 16 )) ) begin
+                        oled_data <= 16'b 11111_111111_11111;    
+                    end
+                    else begin
+                        oled_data <= 16'b 11111_000000_00000; 
+                    end
+                end
+                    
+                else if ((x >= fire_x_left && x<= fire_x_right && y >= 13 && y <= 13)) begin
+                            
+                    if (((x >= fire_x_left ) && (x<= fire_x_left + 3 )) || ((x >= fire_x_left + 10 ) && (x<= fire_x_left + 16 ))) begin
+                        oled_data <= 16'b 11111_111111_11111;    
+                    end
+                    else begin
+                        oled_data <= 16'b 11111_000000_00000; 
+                    end
+                    
+                end
+                
+                else if ((x >= fire_x_left && x<= fire_x_right && y >= 14 && y <= 14)) begin
+                                        
+                    if (((x >= fire_x_left ) && (x<= fire_x_left + 2 )) || ((x >= fire_x_left + 10 ) && (x<= fire_x_left + 14 )) || ((x >= fire_x_left + 17 ) && (x<= fire_x_left + 18 ))) begin
+                        oled_data <= 16'b 11111_111111_11111;    
+                    end
+                    else begin
+                        oled_data <= 16'b 11111_000000_00000; 
+                    end
+                    
+                end
+                
+                else if ((x >= fire_x_left && x<= fire_x_right && y >= 15 && y <= 15)) begin
+                                        
+                    if (((x >= fire_x_left ) && (x<= fire_x_left + 2 )) || ((x >= fire_x_left + 12 ) && (x<= fire_x_left + 14 )) || ((x >= fire_x_left + 17 ) && (x<= fire_x_left + 18 ))) begin
+                        oled_data <= 16'b 11111_111111_11111;    
+                    end
+                    else if (((x >= fire_x_left + 4 ) && (x<= fire_x_left + 7 ))) begin
+                        oled_data <= 16'b 11010_101100_00100;  
+                    end
+                    else begin
+                        oled_data <= 16'b 11111_000000_00000; 
+                    end
+                    
+                end
+                
+                
+                else if ((x >= fire_x_left && x<= fire_x_right && y >= 16 && y <= 16)) begin
+                                        
+                    if (((x >= fire_x_left + 12) && (x<= fire_x_left + 14 )) || ((x >= fire_x_left + 17 ) && (x<= fire_x_left + 18 ))) begin
+                        oled_data <= 16'b 11111_111111_11111;    
+                    end
+                    else if (((x >= fire_x_left + 4 ) && (x<= fire_x_left + 9 ))) begin
+                        oled_data <= 16'b 11010_101100_00100;  
+                    end
+                    else begin
+                        oled_data <= 16'b 11111_000000_00000; 
+                    end
+                    
+                end
+                
+                else if ((x >= fire_x_left && x<= fire_x_right && y >= 17 && y <= 17)) begin
+                                        
+                    if ( ((x >= fire_x_left + 17 ) && (x<= fire_x_left + 18 )) ) begin
+                        oled_data <= 16'b 11111_111111_11111;    
+                    end
+                    else if (((x >= fire_x_left + 3 ) && (x<= fire_x_left + 10 ))) begin
+                        oled_data <= 16'b 11010_101100_00100;  
+                    end
+                    else begin
+                        oled_data <= 16'b 11111_000000_00000; 
+                    end
+                    
+                end
+                
+                
+                else if ((x >= fire_x_left && x<= fire_x_right && y >= 18 && y <= 18)) begin
+                                                    
+                    if ( ((x >= fire_x_left + 15 ) && (x<= fire_x_left + 18 )) ) begin
+                        oled_data <= 16'b 11111_111111_11111;    
+                    end
+                    else if (((x >= fire_x_left + 3 ) && (x<= fire_x_left + 10 ))) begin
+                        oled_data <= 16'b 11010_101100_00100;  
+                    end
+                    else begin
+                        oled_data <= 16'b 11111_000000_00000; 
+                    end
+                    
+                end
+                
+                
+                else if ((x >= fire_x_left && x<= fire_x_right && y >= 19 && y <= 20)) begin
+                                                    
+                    if ( ((x >= fire_x_left + 15 ) && (x<= fire_x_left + 18 )) ) begin
+                        oled_data <= 16'b 11111_111111_11111;    
+                    end
+                    else if (((x >= fire_x_left + 2 ) && (x<= fire_x_left + 10 ))) begin
+                        oled_data <= 16'b 11010_101100_00100;  
+                    end
+                    else begin
+                        oled_data <= 16'b 11111_000000_00000; 
+                    end
+                    
+                end
+                
+                
+                else if ((x >= fire_x_left && x<= fire_x_right && y >= 21 && y <= 21)) begin
+                                                    
+                    if ( ((x >= fire_x_left ) && (x<= fire_x_left + 2 )) || ((x >= fire_x_left + 15 ) && (x<= fire_x_left + 18 )) ) begin
+                        oled_data <= 16'b 11111_111111_11111;    
+                    end
+                    else if (((x >= fire_x_left + 3 ) && (x<= fire_x_left + 10 ))) begin
+                        oled_data <= 16'b 11010_101100_00100;  
+                    end
+                    else begin
+                        oled_data <= 16'b 11111_000000_00000; 
+                    end
+                    
+                end
+                
+                
+                else if ((x >= fire_x_left && x<= fire_x_right && y >= 22 && y <= 22)) begin
+                                                    
+                    if ( ((x >= fire_x_left ) && (x<= fire_x_left + 2 )) || ((x >= fire_x_left + 15 ) && (x<= fire_x_left + 18 )) ) begin
+                        oled_data <= 16'b 11111_111111_11111;    
+                    end
+                    else if (((x >= fire_x_left + 3 ) && (x<= fire_x_left + 8 ))) begin
+                        oled_data <= 16'b 11010_101100_00100;  
+                    end
+                    else begin
+                        oled_data <= 16'b 11111_000000_00000; 
+                    end
+                    
+                end
+                
+                
+                else if ((x >= fire_x_left && x<= fire_x_right && y >= 23 && y <= 23)) begin
+                                                    
+                    if ( ((x >= fire_x_left ) && (x<= fire_x_left + 2 )) || ((x >= fire_x_left + 13 ) && (x<= fire_x_left + 18 )) ) begin
+                        oled_data <= 16'b 11111_111111_11111;    
+                    end
+                    else if (((x >= fire_x_left + 3 ) && (x<= fire_x_left + 8 ))) begin
+                        oled_data <= 16'b 11010_101100_00100;  
+                    end
+                    else begin
+                        oled_data <= 16'b 11111_000000_00000; 
+                    end
+                    
+                end
+                
+                
+                else if ((x >= fire_x_left && x<= fire_x_right && y >= 24 && y <= 24)) begin
+                                                    
+                    if ( ((x >= fire_x_left + 13 ) && (x<= fire_x_left + 18 )) ) begin
+                        oled_data <= 16'b 11111_111111_11111;    
+                    end
+                    else if (((x >= fire_x_left + 2 ) && (x<= fire_x_left + 8 ))) begin
+                        oled_data <= 16'b 11010_101100_00100;  
+                    end
+                    else begin
+                        oled_data <= 16'b 11111_000000_00000; 
+                    end
+                    
+                end
+                
+                
+                else if ((x >= fire_x_left && x<= fire_x_right && y >= 25 && y <= 25)) begin
+                                                                
+                    if ( ((x >= fire_x_left + 11 ) && (x<= fire_x_left + 18 )) ) begin
+                        oled_data <= 16'b 11111_111111_11111;    
+                    end
+                    else if (((x >= fire_x_left + 3 ) && (x<= fire_x_left + 8 ))) begin
+                        oled_data <= 16'b 11010_101100_00100;  
+                    end
+                    else begin
+                        oled_data <= 16'b 11111_000000_00000; 
+                    end
+                    
+                end
+                
+                
+                else if ((x >= fire_x_left && x<= fire_x_right && y >= 26 && y <= 26)) begin
+                                                                
+                    if ( ((x >= fire_x_left + 11 ) && (x<= fire_x_left + 18 )) ) begin
+                        oled_data <= 16'b 11111_111111_11111;    
+                    end
+                    
+                    else begin
+                        oled_data <= 16'b 11111_000000_00000; 
+                    end
+                    
+                end
+                
+                
+                else if ((x >= fire_x_left && x<= fire_x_right && y >= 27 && y <= 27)) begin
+                                                                
+                    if ( (x == fire_x_left )  || ((x >= fire_x_left + 10 ) && (x<= fire_x_left + 18 )) ) begin
+                        oled_data <= 16'b 11111_111111_11111;    
+                    end
+                    
+                    else begin
+                        oled_data <= 16'b 11111_000000_00000; 
+                    end
+                    
+                end
+                
+                
+                
+                else begin
+                    oled_data <= 16'b 11111_111111_11111;
+                end
+                   
+              end      
+        
+                               
+         end          
+       else begin 
+           oled_data <= 16'b 11111_111111_11111;
+       end  
+        
+    end
+    
+     
+          
+    
+    
+        always @(posedge clk_1p5hz) 
+        begin    
+                t_rex_running <= next_state;
+        end
+        
+        
+      
+        
+        
+        
+endmodule
