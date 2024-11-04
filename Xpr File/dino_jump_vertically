@@ -1,0 +1,863 @@
+
+`timescale 1ns / 1ps
+
+module dino_jump_vertically (
+    input clk, // a clock of 150Hz
+    input pb_press, // input pb_press is debounced btnu signal
+    input [15:0] LED,
+    input btnc, btnd,
+    output reg [5:0] dino_y = 39 // initial value of y coordinate is 31
+);
+
+    reg reset_check = 0;
+    reg reset;
+    reg dino_is_jumping;
+    reg [7:0] jump_count;
+    reg [7:0] special_jump_count;
+    reg pb_past_special = 0;
+    reg pb_past = 0;
+    reg [6:0] max_jump_count = 15;
+    reg [7:0] double_tap_counter = 0;
+    reg [7:0] special_double_tap_counter = 0;
+    
+    parameter DOUBLE_TAP_TIME_LIMIT = 70; // make it larger
+    
+    reg special_jump;
+
+    always @ (posedge clk) begin
+    
+       if (reset) begin // Reset to initial conditions
+          
+          double_tap_counter <= 0; 
+          dino_is_jumping <= 0;
+          special_jump <= 0;
+          dino_y <= 39;
+          jump_count <= 0;
+          special_jump_count <= 0;
+          reset <= 0;
+          reset_check <= 1;
+          max_jump_count <= 15;
+          
+       end
+       
+       // Standard jump initiation if conditions are met
+       if (pb_press && !btnd && !pb_past && !dino_is_jumping) begin // !dino_is_jumping removed
+       
+          if (double_tap_counter >= 1) 
+             max_jump_count <= 40; // Double jump height //33
+             
+          else if (double_tap_counter <= 0) 
+          begin
+             max_jump_count <= 35; 
+             double_tap_counter <= DOUBLE_TAP_TIME_LIMIT; 
+          end
+          dino_is_jumping <= 1;  
+          jump_count <= 0;
+       end
+
+       if (double_tap_counter >= 1 && !dino_is_jumping) // !dino_is_jumping removed
+          double_tap_counter <= double_tap_counter - 1;
+
+       // Handle jumping logic
+       if (dino_is_jumping) begin
+           if (jump_count >= 0 && jump_count < max_jump_count / 3) 
+              dino_y <= dino_y - 2; // Faster upward jump
+           else if (jump_count >= max_jump_count / 3 && jump_count < (max_jump_count / 3) * 2) 
+              dino_y <= dino_y - 1; // Slower upward jump
+           else if (jump_count >= (max_jump_count / 3) * 2 && jump_count < (max_jump_count / 3) * 6) 
+              dino_y <= dino_y; // Slow descent
+           else if (jump_count >= (max_jump_count / 3) * 6 && jump_count < (max_jump_count / 3) * 7) 
+              dino_y <= dino_y + 1; // Faster descent
+           else if (jump_count >= (max_jump_count / 3) * 7 && jump_count < (max_jump_count / 3) * 8) 
+                   dino_y <= dino_y + 2; // Faster descent
+           else if (jump_count >= (max_jump_count / 3) * 8)
+           begin
+              dino_is_jumping <= 0; // Jump cycle completed
+              reset <= 1; // Reset to initial conditions
+           end
+           jump_count <= jump_count + 1;
+       end
+
+       // Debouncing logic for pb_press
+       pb_past <= pb_press;
+
+       // Special movement logic when LED[0] or LED[15] is off
+       if (!LED[0] || !LED[15])
+       begin
+       
+          // dino can be moved left and right midair by another module
+          if (pb_press && btnc) // btnu
+             dino_y <= (dino_y > 1) ? dino_y - 1 : dino_y; 
+        
+        
+          if (btnd && btnc) // if the limit gets too large, the dino goes off screen and comes back from the top
+             dino_y <= (dino_y < 39) ? dino_y + 1 : dino_y; 
+
+          reset_check <= 0;
+
+       end
+       
+       else if ( LED[0] && LED[15] && !reset_check)
+       begin
+         dino_y <= 39;
+         reset <= 1;
+       
+       end
+
+       
+//       else begin // if LED[0] or LED[15] lights up again, dino resets to original position
+//         dino_y <= 31;   
+         
+ 
+//       end
+       
+//       pb_past_special <= pb_press; // debouncing for btnu only for special case, also consider btnd
+  
+          
+   end 
+          
+endmodule
+
+
+
+
+
+//`timescale 1ns / 1ps
+
+//module dino_jump_vertically (
+//    input clk, // a clock of 200Hz
+//    input pb_press, // input pb_press is debounced btnu signal
+//    input [15:0] LED,
+//    output reg [5:0] dino_y = 31 // initial value of y coordinate is 31
+//);
+
+//    reg reset;
+//    reg dino_is_jumping;
+//    reg [7:0] jump_count;
+//    reg [7:0] special_jump_count;
+//    reg pb_past_special = 0;
+//    reg pb_past = 0;
+//    reg [6:0] max_jump_count = 15;
+//    reg [7:0] double_tap_counter = 0;
+//    reg [7:0] special_double_tap_counter = 0;
+    
+//    parameter DOUBLE_TAP_TIME_LIMIT = 50;
+    
+//    reg special_jump;
+
+//    always @ (posedge clk) begin
+    
+//       if (reset) begin // Reset to initial conditions
+//          double_tap_counter <= 0; 
+//          dino_is_jumping <= 0;
+//          special_jump <= 0;
+//          dino_y <= 31;
+//          jump_count <= 0;
+//          special_jump_count <= 0;
+//          reset <= 0;
+//          max_jump_count <= 15;
+//       end
+       
+//       // Standard jump initiation if conditions are met
+//       if (pb_press && !dino_is_jumping && !pb_past && LED[0] && LED[15]) begin
+//          if (double_tap_counter > 0) 
+//             max_jump_count <= 30; // Double jump height
+//          else begin
+//             max_jump_count <= 15; 
+//             double_tap_counter <= DOUBLE_TAP_TIME_LIMIT; 
+//          end
+//          dino_is_jumping <= 1;  
+//          jump_count <= 0;
+//       end
+
+//       if (double_tap_counter > 0 && !dino_is_jumping && LED[0] && LED[15]) 
+//          double_tap_counter <= double_tap_counter - 1;
+
+//       // Handle jumping logic
+//       if (dino_is_jumping) begin
+//           if (jump_count < max_jump_count / 3) 
+//              dino_y <= dino_y - 2; // Faster upward jump
+//           else if (jump_count < (max_jump_count / 3) * 2) 
+//              dino_y <= dino_y - 1; // Slower upward jump
+//           else if (jump_count < (max_jump_count / 3) * 3) 
+//              dino_y <= dino_y + 1; // Slow descent
+//           else if (jump_count < (max_jump_count / 3) * 4) 
+//              dino_y <= dino_y + 2; // Faster descent
+//           else begin
+//              dino_is_jumping <= 0; // Jump cycle completed
+//              reset <= 1; // Reset to initial conditions
+//           end
+//           jump_count <= jump_count + 1;
+//       end
+
+//       // Debouncing logic for pb_press
+//       pb_past <= pb_press;
+
+//       // Special jump logic when LED[0] or LED[15] is off
+//       if (pb_press && !special_jump && !pb_past_special && (!LED[0] || !LED[15])) begin
+//          if (special_double_tap_counter > 0)
+//             max_jump_count <= 30;
+//          else begin
+//             max_jump_count <= 15;
+//             special_double_tap_counter <= DOUBLE_TAP_TIME_LIMIT;
+//          end
+//          special_jump <= 1;
+//          special_jump_count <= 0; // Reset the special jump counter
+//       end
+       
+//       if (special_double_tap_counter > 0 && !special_jump && (!LED[0] || !LED[15])) 
+//          special_double_tap_counter <= special_double_tap_counter - 1;
+
+//       // Special jump cycle logic with smoother transition and hold
+//       if (special_jump) begin
+//           if (special_jump_count < max_jump_count / 3) 
+//              dino_y <= dino_y - 2; // Faster upward jump
+//           else if (special_jump_count < (max_jump_count / 3) * 2) 
+//              dino_y <= dino_y - 1; // Slower upward jump
+//           else if (special_jump_count < (max_jump_count / 3) * 2 + 600) 
+//              dino_y <= dino_y; // Peak hold for 600 cycles
+////           else if (special_jump_count < (max_jump_count / 3) * 3 + 600) 
+////              dino_y <= dino_y + 1; // Slow descent
+////           else if (special_jump_count < (max_jump_count / 3) * 4 + 600) 
+////              dino_y <= dino_y + 2; // Faster descent
+//           else begin
+//              special_jump <= 0;
+//              reset <= 1; // Reset after special jump
+//           end
+//           special_jump_count <= special_jump_count + 1;
+//       end
+       
+//       // Debounce for special button press
+//       pb_past_special <= pb_press;
+//    end           
+//endmodule
+
+
+
+
+//`timescale 1ns / 1ps
+
+//module dino_jump_vertically (
+//    input clk, // a clock of 200Hz
+//    input pb_press, // input pb_press is debounced btnu signal
+//    input [15:0] LED,
+//    output reg [5:0] dino_y = 31 // outputs y-coordinate of dino
+//    // initial value of y coordinate is 31
+//);
+
+//    reg reset;
+//    reg dino_is_jumping; // to check if the dino is jumping
+//    reg [7:0] jump_count;
+//    reg [7:0] special_jump_count;
+//    reg pb_past_special = 0;
+//    reg pb_past = 0;
+//    reg [6:0] max_jump_count = 15;
+//    reg [7:0] double_tap_counter = 0;
+//    reg [7:0] special_double_tap_counter = 0;
+    
+//    parameter DOUBLE_TAP_TIME_LIMIT = 50;
+    
+//    reg special_jump;
+
+//    always @ (posedge clk) begin
+    
+//       if (reset) begin // Reset to initial conditions
+//          double_tap_counter <= 0; 
+//          dino_is_jumping <= 0;
+//          special_jump <= 0;
+//          dino_y <= 31;
+//          jump_count <= 0;
+//          special_jump_count <= 0; // Ensure special_jump_count is reset
+//          reset <= 0;
+//          max_jump_count <= 15;
+//       end
+       
+//       // Standard jump initiation if conditions are met
+//       if (pb_press && !dino_is_jumping && !pb_past && LED[0] && LED[15]) begin
+//          if (double_tap_counter > 0) 
+//             max_jump_count <= 30; // Double jump height
+//          else begin
+//             max_jump_count <= 15; 
+//             double_tap_counter <= DOUBLE_TAP_TIME_LIMIT; 
+//          end
+//          dino_is_jumping <= 1;  
+//          jump_count <= 0;
+//       end
+
+//       if (double_tap_counter > 0 && !dino_is_jumping && LED[0] && LED[15]) 
+//          double_tap_counter <= double_tap_counter - 1;
+
+//       // Handle jumping logic
+//       if (dino_is_jumping) begin
+//           if (jump_count < max_jump_count / 3) 
+//              dino_y <= dino_y - 2; // Faster upward jump
+//           else if (jump_count < (max_jump_count / 3) * 2) 
+//              dino_y <= dino_y - 1; // Slower upward jump
+//           else if (jump_count < (max_jump_count / 3) * 3) 
+//              dino_y <= dino_y + 1; // Slow descent
+//           else if (jump_count < (max_jump_count / 3) * 4) 
+//              dino_y <= dino_y + 2; // Faster descent
+//           else begin
+//              dino_is_jumping <= 0; // Jump cycle completed
+//              reset <= 1; // Reset to initial conditions
+//           end
+//           jump_count <= jump_count + 1;
+//       end
+
+//       // Debouncing logic for pb_press
+//       pb_past <= pb_press;
+
+//       // Special jump logic when LED[0] or LED[15] is off
+//       if (pb_press && !special_jump && !pb_past && (!LED[0] || !LED[15])) begin
+//          if (special_double_tap_counter > 0)
+//             special_jump_count <= 30;
+//          else begin
+//             special_jump_count <= 15;
+//             special_double_tap_counter <= DOUBLE_TAP_TIME_LIMIT;
+//          end
+//          special_jump <= 1;
+//       end
+       
+//       if (special_double_tap_counter > 0 && !special_jump && (!LED[0] || !LED[15])) 
+//          special_double_tap_counter <= special_double_tap_counter - 1;
+
+//       // Special jump cycle logic
+//       if (special_jump) begin
+//           if (special_jump_count < max_jump_count / 3) 
+//              dino_y <= dino_y - 2; 
+//           else if (special_jump_count < (max_jump_count / 3) * 2) 
+//              dino_y <= dino_y - 1; 
+//           else if (special_jump_count < (max_jump_count / 3) * 2 + 600) 
+//              dino_y <= dino_y; // Peak hold for 600 cycles
+//           else if (special_jump_count < (max_jump_count / 3) * 3 + 615) 
+//              dino_y <= dino_y + 1; 
+//           else if (special_jump_count < (max_jump_count / 3) * 4 + 620) 
+//              dino_y <= dino_y + 2; 
+//           else begin
+//              special_jump <= 0;
+//              reset <= 1; // Reset after special jump
+//           end
+//           special_jump_count <= special_jump_count + 1;
+//       end
+       
+//       // Debounce for special button press
+//       pb_past_special <= pb_press;
+//    end           
+//endmodule
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//`timescale 1ns / 1ps
+
+//module dino_jump_vertically (
+//    input clk, // a clock of 200Hz
+//    input pb_press, // input pb_press is debounced btnu signal
+//    input [15:0] LED,
+//    output reg [5:0] dino_y = 31 // outputs y-coordinate of dino
+//    // initial value of y coordinate is 31
+//);
+
+
+//    reg reset;
+//    reg dino_is_jumping; // to check if the dino is jumping
+//    reg [7:0] jump_count;
+//    reg [7:0] special_jump_count;
+//    reg pb_past_special = 0;
+//    reg pb_past = 0;
+//    reg [6:0] max_jump_count = 15;
+//    reg [7:0] double_tap_counter = 0;
+//    reg [7:0] special_double_tap_counter = 0;
+    
+//    parameter DOUBLE_TAP_TIME_LIMIT = 50;
+    
+//    reg special_jump;
+
+    
+    
+//    always @ (posedge clk) begin
+    
+//       if (reset) begin // Reset back to initial conditions
+//          double_tap_counter <= 0; // initialise to 0, not 1. Thus, at the first pb press, double jump height is not implemented
+//          dino_is_jumping <= 0;
+//          special_jump <= 0;
+//          dino_y <= 31; // initial top y-coordinate of dino
+//          jump_count <= 0;
+//          special_jump_count <= 0;
+//          reset <= 0;
+//          max_jump_count <= 15;
+//       end
+       
+       
+       
+//        // this code block executes if pb is pressed when dino is not jumping and pb was not previously presses
+//        if (pb_press && !dino_is_jumping && !pb_past && LED[0] && LED[15])
+//        begin
+        
+//          // if double tap is detected, jump to height of 30, where jump counter (timer) is doubled
+//          if (double_tap_counter >= 1) begin // if double_tap_counter has a value between 1 and 50, double jump logic is implemented
+          
+//             max_jump_count <= 30; // Double-tap jump height
+//          end
+          
+//           else if (double_tap_counter <= 0) begin
+//             // Single tap is detected if double_tap_counter == 0
+//             max_jump_count <= 15; // Normal jump height
+//             double_tap_counter <= DOUBLE_TAP_TIME_LIMIT; // Start the double-tap counter
+//          end
+          
+//          dino_is_jumping <= 1;  // Start jumping
+//          jump_count <= 0;
+          
+//        end
+
+//       // Double-tap counter decreases from 50 to 0 every clk cycle
+//       // DOUBLE_TAP_TIME_LIMIT has a fixed value of 50 (see parameter assignment in line 118)
+//       // double tap counter stop sdecreasing once it reaches 0
+//       // if btnu is pressed again before double_tap_counter decreases to 0, 
+//       // the if block above (line 135) executes as the double_tap_counter will have a value larger than 0
+//       if (double_tap_counter >= 1 && !dino_is_jumping && LED[0] && LED[15])
+//       begin // changed equality sign
+//          double_tap_counter <= double_tap_counter - 1;
+//       end
+        
+//       if (dino_is_jumping) begin
+//           // Dino jumps upwards faster
+//           if (jump_count >= 0 && jump_count < max_jump_count / 3) // 5
+//              dino_y <= dino_y - 2;
+              
+//           // Dino jumps upwards slower --> from  jump_count 5 to 10
+//           else if (jump_count >= max_jump_count / 3 && jump_count <= (max_jump_count / 3) * 2) // 10
+//              dino_y <= dino_y - 1;
+              
+           
+//           // Dino descends falls back down slower --> from jump count 10 to 15
+//           else if (jump_count > (max_jump_count / 3) * 2 && jump_count <= (max_jump_count / 3) * 3) begin
+//              dino_y <= dino_y + 1;
+////              dino_is_jumping <= 0;
+////              reset <= 1;
+
+//           end
+           
+//           // Dino descends faster duw to acceleration --> from jump count 15 to 20
+//           else if (jump_count > (max_jump_count / 3) * 3 && jump_count <= (max_jump_count / 3) * 4) begin
+//              dino_y <= dino_y + 2;
+              
+//           end
+           
+//           else if (jump_count > (max_jump_count / 3) * 4) begin
+//              dino_is_jumping <= 0;
+//              reset <= 1;
+           
+//           end
+              
+             
+//           jump_count <= jump_count + 1; // jump_count increases by 1 every clk cycle, once every cycle of 200Hz
+           
+//       end
+       
+//       pb_past <= pb_press; // Debouncing logic for button press
+       
+//      if (pb_press && !special_jump && !pb_past && (!LED[0] || !LED[15]))
+           
+//           begin
+           
+//              if (special_double_tap_counter >= 1)
+//              begin
+//                special_jump_count <= 30;
+           
+           
+//              end 
+                  
+//              else if (special_double_tap_counter <= 0)
+//              begin
+//              special_jump_count <= 15;
+//              double_tap_counter <= DOUBLE_TAP_TIME_LIMIT;
+//              end
+           
+//              special_jump <= 1;
+//              special_jump_count <= 0;
+           
+           
+//           end
+           
+//          if (special_double_tap_counter >= 1 && !special_jump && (!LED[0] || !LED[15]))
+//           begin // changed equality sign
+//              special_double_tap_counter <= special_double_tap_counter - 1;
+//           end   
+           
+//           if (special_jump) begin
+//                      // Dino jumps upwards faster
+//                      if (special_jump_count >= 0 && jump_count < special_jump_count / 3) // 5
+//                         dino_y <= dino_y - 2;
+                         
+//                      // Dino jumps upwards slower --> from  jump_count 5 to 10
+//                      else if (special_jump_count >= max_jump_count / 3 && special_jump_count <= (max_jump_count / 3) * 2) // 10
+//                         dino_y <= dino_y - 1;
+           
+//                      else if (special_jump_count > (max_jump_count / 3) * 2 && special_jump_count <= (max_jump_count / 3) * 2 + 600) // 10 to 610
+//                          dino_y <= dino_y; // dino stays at its peak for 600 clk cycles
+                         
+                      
+//                      // Dino descends falls back down slower --> from jump count 10 to 15
+//                      else if (special_jump_count > (max_jump_count / 3) * 2 + 600 && special_jump_count <= (max_jump_count / 3) * 3 + 615) begin // 610 to 615
+//                          dino_y <= dino_y + 1;
+           
+           
+//                      end
+                      
+//                      // Dino descends faster down to acceleration --> from jump count 15 to 20
+//                      else if (special_jump_count > (max_jump_count / 3) * 3 + 615 && special_jump_count <= (max_jump_count / 3) * 4 + 620) begin // 615 to 620
+//                         dino_y <= dino_y + 2;
+                         
+//                      end
+                      
+//                      else if (special_jump_count > (max_jump_count / 3) * 4 + 620) begin
+//                         special_jump <= 0;
+//                         reset <= 1;
+                      
+//                      end
+                         
+                        
+//                      special_jump_count <= special_jump_count + 1; // special_jump_count increases by 1 every clk cycle, once every cycle of 200Hz
+                      
+//                  end
+                  
+//                  pb_past_special <= pb_press; // Debouncing logic for button press
+           
+           
+//           end           
+       
+    
+
+    
+
+    
+
+//endmodule
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//`timescale 1ns / 1ps
+
+//module dino_jump_vertically (
+//    input clk, // a clock of 200Hz
+//    input pb_press, // input pb_press is debounced btnu signal
+//    input [15:0] LED,
+//    output reg [5:0] dino_y = 31 // outputs y-coordinate of dino
+//    // initial value of y coordinate is 31
+//);
+
+
+//    reg reset;
+//    reg dino_is_jumping; // to check if the dino is jumping
+//    reg [7:0] jump_count;
+//    reg [7:0] special_jump_count;
+//    reg pb_past_special = 0;
+//    reg pb_past = 0;
+//    reg [6:0] max_jump_count = 15;
+//    reg [7:0] double_tap_counter = 0;
+    
+//    parameter DOUBLE_TAP_TIME_LIMIT = 50;
+    
+//    reg special_jump;
+    
+    
+//    always @ (posedge clk) begin
+    
+//       if (reset) begin // Reset back to initial conditions
+//          double_tap_counter <= 0; // initialise to 0, not 1. Thus, at the first pb press, double jump height is not implemented
+//          dino_is_jumping <= 0;
+//          special_jump <= 0;
+//          dino_y <= 31; // initial top y-coordinate of dino
+//          jump_count <= 0;
+//          reset <= 0;
+//          max_jump_count <= 15;
+//       end
+       
+       
+       
+//        // this code block executes if pb is pressed when dino is not jumping and pb was not previously presses
+//        if (pb_press && !dino_is_jumping && !pb_past && LED[0] && LED[15])
+//        begin
+        
+//          // if double tap is detected, jump to height of 30, where jump counter (timer) is doubled
+//          if (double_tap_counter >= 1) begin // if double_tap_counter has a value between 1 and 50, double jump logic is implemented
+          
+//             max_jump_count <= 30; // Double-tap jump height
+//          end
+          
+//           else if (double_tap_counter <= 0) begin
+//             // Single tap is detected if double_tap_counter == 0
+//             max_jump_count <= 15; // Normal jump height
+//             double_tap_counter <= DOUBLE_TAP_TIME_LIMIT; // Start the double-tap counter
+//          end
+          
+//          dino_is_jumping <= 1;  // Start jumping
+//          jump_count <= 0;
+          
+//        end
+
+//       // Double-tap counter decreases from 50 to 0 every clk cycle
+//       // DOUBLE_TAP_TIME_LIMIT has a fixed value of 50 (see parameter assignment in line 118)
+//       // double tap counter stop sdecreasing once it reaches 0
+//       // if btnu is pressed again before double_tap_counter decreases to 0, 
+//       // the if block above (line 135) executes as the double_tap_counter will have a value larger than 0
+//       if (double_tap_counter >= 1 && !dino_is_jumping && LED[0] && LED[15])
+//       begin // changed equality sign
+//          double_tap_counter <= double_tap_counter - 1;
+//       end
+        
+//       if (dino_is_jumping && LED[0] && LED[15]) begin
+//           // Dino jumps upwards faster
+//           if (jump_count >= 0 && jump_count < max_jump_count / 3) // 5
+//              dino_y <= dino_y - 2;
+              
+//           // Dino jumps upwards slower --> from  jump_count 5 to 10
+//           else if (jump_count >= max_jump_count / 3 && jump_count <= (max_jump_count / 3) * 2) // 10
+//              dino_y <= dino_y - 1;
+              
+           
+//           // Dino descends falls back down slower --> from jump count 10 to 15
+//           else if (jump_count > (max_jump_count / 3) * 2 && jump_count <= (max_jump_count / 3) * 3) begin
+//              dino_y <= dino_y + 1;
+////              dino_is_jumping <= 0;
+////              reset <= 1;
+
+//           end
+           
+//           // Dino descends faster duw to acceleration --> from jump count 15 to 20
+//           else if (jump_count > (max_jump_count / 3) * 3 && jump_count <= (max_jump_count / 3) * 4) begin
+//              dino_y <= dino_y + 2;
+              
+//           end
+           
+//           else if (jump_count > (max_jump_count / 3) * 4) begin
+//              dino_is_jumping <= 0;
+//              reset <= 1;
+           
+//           end
+              
+             
+//           jump_count <= jump_count + 1; // jump_count increases by 1 every clk cycle, once every cycle of 200Hz
+           
+//       end
+       
+//       pb_past <= pb_press; // Debouncing logic for button press
+       
+//      if (pb_press && !special_jump && !pb_past && (!LED[0] || !LED[15]))
+           
+//           begin
+           
+//              if (double_tap_counter >= 1)
+//              begin
+//                max_jump_count <= 30;
+           
+           
+//              end 
+                  
+//              else if (double_tap_counter <= 0)
+//              begin
+//              max_jump_count <= 15;
+//              double_tap_counter <= DOUBLE_TAP_TIME_LIMIT;
+//              end
+           
+//              special_jump <= 1;
+//              jump_count <= 0;
+           
+           
+//           end
+           
+//          if (double_tap_counter >= 1 && !special_jump && (!LED[0] || !LED[15]))
+//           begin // changed equality sign
+//              double_tap_counter <= double_tap_counter - 1;
+//           end   
+           
+//           if (special_jump) begin
+//                      // Dino jumps upwards faster
+//                      if (jump_count >= 0 && jump_count < max_jump_count / 3) // 5
+//                         dino_y <= dino_y - 2;
+                         
+//                      // Dino jumps upwards slower --> from  jump_count 5 to 10
+//                      else if (jump_count >= max_jump_count / 3 && jump_count <= (max_jump_count / 3) * 2) // 10
+//                         dino_y <= dino_y - 1;
+           
+//                      else if (jump_count > (max_jump_count / 3) * 2 && jump_count <= (max_jump_count / 3) * 2 + 600) // 10 to 610
+//                          dino_y <= dino_y; // dino stays at its peak for 600 clk cycles
+                         
+                      
+//                      // Dino descends falls back down slower --> from jump count 10 to 15
+//                      else if (jump_count > (max_jump_count / 3) * 2 + 600 && jump_count <= (max_jump_count / 3) * 3 + 615) begin // 610 to 615
+//                          dino_y <= dino_y + 1;
+           
+           
+//                      end
+                      
+//                      // Dino descends faster down to acceleration --> from jump count 15 to 20
+//                      else if (jump_count > (max_jump_count / 3) * 3 + 615 && jump_count <= (max_jump_count / 3) * 4 + 620) begin // 615 to 620
+//                         dino_y <= dino_y + 2;
+                         
+//                      end
+                      
+//                      else if (jump_count > (max_jump_count / 3) * 4 + 620) begin
+//                         special_jump <= 0;
+//                         reset <= 1;
+                      
+//                      end
+                         
+                        
+//                      jump_count <= jump_count + 1; // jump_count increases by 1 every clk cycle, once every cycle of 200Hz
+                      
+//                  end
+                  
+////                  pb_past <= pb_press; // Debouncing logic for button press
+           
+           
+//           end           
+       
+    
+
+    
+
+    
+
+//endmodule
+
+
+
+
+//`timescale 1ns / 1ps
+
+//module dino_jump_vertically (
+//    input clk,                // 200Hz clock input
+//    input pb_press,           // debounced btnu input for triggering jumps
+//    input [15:0] LED,         // LED status input for conditional jumping
+//    output reg [5:0] dino_y = 31 // Dino y-coordinate, initial position at 31
+//);
+
+
+//    reg reset;
+//    reg dino_is_jumping = 0;      // Flag for standard jump
+//    reg special_jump = 0;         // Flag for special jump
+//    reg [7:0] jump_count = 0;     // Standard jump counter
+//    reg [7:0] special_jump_count = 0; // Special jump counter
+//    reg [7:0] double_tap_counter = 0; // Counter for double tap on normal jump
+//    reg [7:0] special_double_tap_counter = 0; // Counter for special jump double tap
+    
+//    parameter DOUBLE_TAP_TIME_LIMIT = 50;
+//    reg [6:0] max_jump_count; // Max jump height, adjusted per jump type
+    
+//    // Button press history for debouncing
+//    reg pb_past = 0;
+
+//    // Main procedural block
+//    always @ (posedge clk) begin
+//       // Reset handling block
+//       if (reset) begin
+//          reset <= 0;
+//          dino_y <= 31;         // Reset dino position
+//          double_tap_counter <= 0;
+//          special_double_tap_counter <= 0;
+//          jump_count <= 0;
+//          special_jump_count <= 0;
+//          dino_is_jumping <= 0;
+//          special_jump <= 0;
+//          max_jump_count <= 15; // Default jump height
+//       end
+
+//       // Normal jump initiation
+//       if (pb_press && !dino_is_jumping && !pb_past && LED[0] && LED[15]) begin
+//          max_jump_count <= (double_tap_counter > 0) ? 30 : 15; // Standard/double jump height
+//          double_tap_counter <= (double_tap_counter == 0) ? DOUBLE_TAP_TIME_LIMIT : double_tap_counter;
+//          dino_is_jumping <= 1;
+//          jump_count <= 0;
+//       end
+
+//       // Special jump initiation if either LED[0] or LED[15] is off
+//       if (pb_press && !special_jump && !pb_past && (!LED[0] || !LED[15])) begin
+//          max_jump_count <= (special_double_tap_counter > 0) ? 30 : 15; // Special double or single height
+//          special_double_tap_counter <= (special_double_tap_counter == 0) ? DOUBLE_TAP_TIME_LIMIT : special_double_tap_counter;
+//          special_jump <= 1;
+//          special_jump_count <= 0;
+//       end
+       
+       
+           
+//       // Double tap countdown
+//       if (double_tap_counter > 0 && !dino_is_jumping)
+//          double_tap_counter <= double_tap_counter - 1;
+
+//       if (special_double_tap_counter > 0 && !special_jump)
+//          special_double_tap_counter <= special_double_tap_counter - 1;
+
+//       // Dino standard jump cycle
+//       if (dino_is_jumping) begin
+//           if (jump_count < max_jump_count / 3) 
+//              dino_y <= dino_y - 2;  // Fast upward phase
+//           else if (jump_count < (max_jump_count / 3) * 2) 
+//              dino_y <= dino_y - 1;  // Slower upward phase
+//           else if (jump_count < max_jump_count) 
+//              dino_y <= dino_y + 1;  // Descent phase
+//           else begin
+//              dino_is_jumping <= 0;  // Reset jump flag
+//              reset <= 1;            // Trigger reset after jump
+//           end
+//           jump_count <= jump_count + 1;
+//       end
+
+//       // Special jump cycle with peak hold
+//       if (special_jump) begin
+//           if (special_jump_count < max_jump_count / 3) //5
+//              dino_y <= dino_y - 2; // Fast upward
+//           else if (special_jump_count < (max_jump_count / 3) * 2)  //10
+//              dino_y <= dino_y - 1; // Slower upward
+//           else if (special_jump_count < ((max_jump_count / 3) * 2) + 600) // 610
+//              dino_y <= dino_y;     // Hold at peak for 600 cycles
+//           else if (special_jump_count < ((max_jump_count / 3) * 3) + 600) // 620 --> 615
+//              dino_y <= dino_y + 1; // Start descent slowly
+//           else if (special_jump_count < ((max_jump_count / 3) * 4) + 600) // 630 --> 620
+//              dino_y <= dino_y + 2; // Faster descent
+//           else begin
+//              special_jump <= 0;    // End special jump
+//              reset <= 1;           // Trigger reset
+//           end
+//           special_jump_count <= special_jump_count + 1;
+//       end
+
+//       // Update button press history for debounce
+//       pb_past <= pb_press;
+//    end
+
+//endmodule
+
+
+
