@@ -1,0 +1,221 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 02.11.2024 15:24:02
+// Design Name: 
+// Module Name: obstacle_display
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
+
+
+module obstacle_display(
+input clk,
+input [6:0] x,
+input [6:0] x_left,
+input [6:0] x_right,
+input [5:0] y,
+input [5:0] y_top,
+input [5:0] y_bot,
+input [1:0] state,
+input bird_state,
+input [15:0] background_colour,
+output reg [15:0] oled
+);
+always @(posedge clk) begin
+    if (state == 2'b00) begin // one cactus , width = 11, height = 12
+        if (x >= (x_left + 4) && x <= (x_right - 4) && y >= y_top && y <= y_bot) begin // middle
+            oled <= 16'b00000_111111_00000;
+        end
+        else if (x >= x_left  && x <= (x_right - 9) && y >= (y_top + 4)&& y <= (y_bot - 4)) begin // left
+            oled <= 16'b00000_111111_00000;
+        end
+        else if (x >= (x_left + 9) && x <= x_right && y >= (y_top + 2)&& y <= (y_bot - 6 )) begin // right
+            oled <= 16'b00000_111111_00000;
+        end
+        else if (x >= (x_left + 2) && x <= (x_right - 7) && y >= (y_top + 6) && y <= (y_bot - 4) ) begin // small_left
+            oled <= 16'b00000_111111_00000;
+        end
+        else if (x >= (x_left + 7) && x <= (x_right - 2) && y >=  (y_top + 4) && y <= (y_bot - 6) ) begin // small_right
+            oled <= 16'b00000_111111_00000;
+        end
+        else if (y >= 60 && y <= 63) begin
+            oled <= 16'b11111_110111_10110; // Ground color
+        end                              
+        else 
+            oled <= background_colour;
+    end  
+ 
+    else if (state == 2'b01) begin // two cacti , width = 24, height = 12
+        if (x >= (x_left + 4) && x <= (x_right - 17) && y >= y_top && y <= y_bot) begin // middle1
+            oled <= 16'b00000_111111_00000;
+        end
+        else if (x >= x_left  && x <= (x_right - 22) && y >= (y_top + 4)&& y <= (y_bot - 4)) begin // left1
+            oled <= 16'b00000_111111_00000;
+        end
+        else if (x >= (x_left + 9) && x <= (x_right - 13) && y >= (y_top + 2)&& y <= (y_bot - 6 )) begin // right1
+            oled <= 16'b00000_111111_00000;
+        end
+        else if (x >= (x_left + 2) && x <= (x_right - 20) && y >= (y_top + 6) && y <= (y_bot - 4) ) begin // small_left1
+            oled <= 16'b00000_111111_00000;
+        end
+        else if (x >= (x_left + 7) && x <= (x_right - 15) && y >=  (y_top + 4) && y <= (y_bot - 6) ) begin // small_right1
+            oled <= 16'b00000_111111_00000;
+        end
+        else if (x >= (x_left + 17) && x <= (x_right - 4) && y >= y_top && y <= y_bot) begin // middle2
+            oled <= 16'b00000_111111_00000;
+        end
+        else if (x >= x_left + 13  && x <= (x_right - 9) && y >= (y_top + 2)&& y <= (y_bot - 6)) begin // left2
+            oled <= 16'b00000_111111_00000;
+        end
+        else if (x >= (x_left + 22) && x <= (x_right) && y >= (y_top + 4)&& y <= (y_bot - 4 )) begin // right2
+            oled <= 16'b00000_111111_00000;
+        end
+        else if (x >= (x_left + 15) && x <= (x_right - 7) && y >= (y_top + 4) && y <= (y_bot - 6) ) begin // small_left2
+            oled <= 16'b00000_111111_00000;
+        end
+        else if (x >= (x_left + 20) && x <= (x_right - 2) && y >=  (y_top + 6) && y <= (y_bot - 4) ) begin // small_right2
+            oled <= 16'b00000_111111_00000;
+        end
+        else if (y >= 60 && y <= 63) begin
+            oled <= 16'b11111_110111_10110; // Ground color
+        end                              
+        else 
+            oled <= background_colour;
+    end
+    
+    else if (state == 2'b10) begin // one cactus , width = 11, height = 20
+        if (x >= (x_left + 4) && x <= (x_right - 4) && y >= y_top && y <= y_bot) begin // middle
+           oled <= 16'b00000_111111_00000;
+        end
+        else if (x >= x_left  && x <= (x_right - 9) && y >= (y_top + 12)&& y <= (y_bot - 4)) begin // left
+           oled <= 16'b00000_111111_00000;
+        end
+        else if (x >= (x_left + 9) && x <= x_right && y >= (y_top + 6)&& y <= (y_bot - 10)) begin // right
+           oled <= 16'b00000_111111_00000;
+        end
+        else if (x >= (x_left + 2) && x <= (x_right - 7) && y >= (y_top + 14) && y <= (y_bot - 4) ) begin // small_left
+           oled <= 16'b00000_111111_00000;
+        end
+        else if (x >= (x_left + 7) && x <= (x_right - 2) && y >=  (y_top + 8) && y <= (y_bot - 10) ) begin // small_right
+           oled <= 16'b00000_111111_00000;
+        end
+        else if (x >= x_left  && x <= (x_right - 9) && y >= (y_top + 1)&& y <= (y_bot - 15)) begin // left2
+           oled <= 16'b00000_111111_00000;
+        end
+        else if (x >= (x_left + 2) && x <= (x_right - 7) && y >= (y_top + 3) && y <= (y_bot - 15) ) begin // small_left2
+           oled <= 16'b00000_111111_00000;
+        end
+        else if (y >= 60 && y <= 63) begin
+            oled <= 16'b11111_110111_10110; // Ground color
+        end                              
+        else 
+            oled <= background_colour;
+        
+    end
+    
+    else if (state == 2'b11) begin // bird width = 16, height = 13
+        if (bird_state == 0) begin //wing up
+            if (x >= x_left + 8 && x <= x_right - 9 && y >= y_top && y <= y_bot - 12)  begin 
+                oled <= 16'b10011_010110_00111;
+            end
+            else if (x >= x_left + 8 && x <= x_right - 7 && y >= y_top + 1 && y <= y_bot - 11)  begin 
+                oled <= 16'b10011_010110_00111;
+            end
+            else if (x >= x_left + 3 && x <= x_right - 12 && y >= y_top + 2 && y <= y_bot - 10)  begin 
+                oled <= 16'b10011_010110_00111;
+            end
+            else if (x >= x_left + 8 && x <= x_right - 5 && y >= y_top + 2 && y <= y_bot - 10)  begin 
+                oled <= 16'b10011_010110_00111;
+            end
+            else if (x >= x_left + 2 && x <= x_right - 11 && y >= y_top + 3 && y <= y_bot - 9)  begin 
+                oled <= 16'b10011_010110_00111;
+            end
+            else if (x >= x_left + 8 && x <= x_right - 4 && y >= y_top + 3 && y <= y_bot - 9)  begin 
+                oled <= 16'b10011_010110_00111;
+            end
+            else if (x >= x_left + 1 && x <= x_right - 13 && y >= y_top + 4 && y <= y_bot - 8)  begin 
+                oled <= 16'b10011_010110_00111;
+            end
+            else if (x >= x_left + 4 && x <= x_right - 10 && y >= y_top + 4 && y <= y_bot - 8)  begin 
+                oled <= 16'b10011_010110_00111;
+            end
+            else if (x >= x_left + 8 && x <= x_right - 3 && y >= y_top + 4 && y <= y_bot - 8)  begin 
+                oled <= 16'b10011_010110_00111;
+            end
+            else if (x >= x_left && x <= x_right && y >= y_top + 5 && y <= y_bot - 7)  begin 
+                oled <= 16'b10011_010110_00111;
+            end
+            else if (x >= x_left + 4 && x <= x_right - 2 && y >= y_top + 6 && y <= y_bot - 6)  begin 
+                oled <= 16'b10011_010110_00111;
+            end
+            else if (x >= x_left + 6 && x <= x_right - 1 && y >= y_top + 7 && y <= y_bot - 5)  begin 
+                oled <= 16'b10011_010110_00111;
+            end
+            else if (x >= x_left + 8 && x <= x_right - 3 && y >= y_top + 8 && y <= y_bot - 4 )  begin 
+                oled <= 16'b10011_010110_00111;
+            end
+            else if (y >= 60 && y <= 63) begin
+                oled <= 16'b11111_110111_10110; // Ground color
+            end                              
+            else 
+                oled <= background_colour;
+        end
+        
+        else if (bird_state == 1) begin  //wing down         
+            if (x >= x_left + 3 && x <= x_right - 12 && y >= y_top + 2 && y <= y_bot - 10)  begin 
+                oled <= 16'b10011_010110_00111;
+            end
+            else if (x >= x_left + 2 && x <= x_right - 11 && y >= y_top + 3 && y <= y_bot - 9)  begin 
+                oled <= 16'b10011_010110_00111;
+            end
+            else if (x >= x_left + 1 && x <= x_right - 13 && y >= y_top + 4 && y <= y_bot - 8)  begin 
+                oled <= 16'b10011_010110_00111;
+            end
+            else if (x >= x_left + 4 && x <= x_right - 10 && y >= y_top + 4 && y <= y_bot - 8)  begin 
+                oled <= 16'b10011_010110_00111;
+            end
+            else if (x >= x_left && x <= x_right && y >= y_top + 5 && y <= y_bot - 7)  begin 
+                oled <= 16'b10011_010110_00111;
+            end
+            else if (x >= x_left + 4 && x <= x_right - 2 && y >= y_top + 6 && y <= y_bot - 6)  begin 
+                oled <= 16'b10011_010110_00111;
+            end
+            else if (x >= x_left + 6 && x <= x_right - 1 && y >= y_top + 7 && y <= y_bot - 5)  begin 
+                oled <= 16'b10011_010110_00111;
+            end
+            else if (x >= x_left + 7 && x <= x_right - 3 && y >= y_top + 8 && y <= y_bot - 3)  begin 
+                oled <= 16'b10011_010110_00111;
+            end
+            else if (x >= x_left + 7 && x <= x_right - 4 && y >= y_top + 10 && y <= y_bot - 2)  begin 
+                oled <= 16'b10011_010110_00111;
+            end
+            else if (x >= x_left + 7 && x <= x_right - 5 && y >= y_top + 11 && y <= y_bot - 1)  begin 
+                oled <= 16'b10011_010110_00111;
+            end
+            else if (x >= x_left + 7 && x <= x_right - 6 && y >= y_top + 12 && y <= y_bot)  begin 
+                oled <= 16'b10011_010110_00111;
+            end
+            else if (y >= 60 && y <= 63) begin
+                oled <= 16'b11111_110111_10110; // Ground color
+            end                              
+            else 
+                oled <= background_colour;
+        end            
+    end
+    
+    
+ end
+endmodule
+
