@@ -8,6 +8,7 @@ Raptor Run is a single-player game developed as part of an EE2026 project. The g
 - [Gameplay](#gameplay)
 - [Features](#features)
 - [Contributors](#contributors)
+- [Documentation](#documentation)
 
 ## Getting Started
 
@@ -63,3 +64,7 @@ When you collide with an obstacle:
 - **Jaiswal Yasaswi** - Obstacle detection and Game Over screen.
 - **Ong Qi Zhi Ignatius** - Menu design and score counter.
 - **Saiful Imran** - In-game dinosaur animation, cloud animations, and LED-based special effects.
+
+## Documentation
+
+For more detailed information, please refer to the [User Guide Report on Google Docs](https://docs.google.com/document/d/1alTrEKEKii8VYVX91-bMMfjJtY6HHRdSYMH5PBKTT8k/edit?usp=drive_link).
