@@ -1,0 +1,793 @@
+`timescale 1ns / 1ps
+
+module game_display (
+
+   input [6:0] x,
+   input [5:0] y,
+   input [6:0] dino_x, 
+   input [5:0] dino_y, // takes in the y-coordinate of dino from dino_jump_vertically module
+   input clk_25MHz, // takes an input of 25MHz
+   input clk_100Hz, // takes an input of 100Hz
+   input clk_50Hz, // takes an input of 50Hz
+   input btnd_pressed,
+   input btnc_pressed,
+   input [15:0] LED,
+   input [1:0] cloud_state, // from random state gen module
+   output reg [15:0] oled_colour = 0,
+   output reg [1:0] dino_type
+   
+   );
+   
+   parameter RED = 16'b11111_000000_00000;
+   parameter GREEN = 16'b11111_110111_10110;
+   parameter WHITE = 16'b11111_111111_11111;
+   parameter BLACK = 16'b00000_000000_00000;
+   
+   // declaring coordinates of dino
+//   reg [6:0] dino_x;
+//   reg [5:0] dino_y;
+   
+   // declaring coordinates of cactus
+   reg [6:0] cactus_x = 80;
+   reg [5:0] cactus_y;
+   
+   reg [1:0] dino_state = 0; // decides if dino is normal or jumping
+   reg [1:0] cactus_type;
+   
+   
+   
+   // initial values of the x-coordinates & y-coordinates of each cloud:
+   // clouds 1 to 3 to be used for case 0 OR case 2
+   reg [6:0] cloud1_x = 80;
+   reg [5:0] cloud1_y = 10;
+   parameter INITIAL_CLOUD1_Y = 10; 
+   
+   reg [6:0] cloud2_x = 60;
+   reg [5:0] cloud2_y = 6;
+   parameter INITIAL_CLOUD2_Y = 6; 
+   
+   reg [6:0] cloud3_x = 20;
+   reg [5:0] cloud3_y = 5;
+   parameter INITIAL_CLOUD3_Y = 5;
+   
+   
+   // initial values of the x-coordinates & y-coordinates of each cloud:
+   // clouds 4 to 6 to be used for case 1
+   reg [6:0] cloud4_x = 60;
+   reg [5:0] cloud4_y = 6;
+   parameter INITIAL_CLOUD4_Y = 6; 
+   
+   reg [6:0] cloud5_x = 80;
+   reg [5:0] cloud5_y = 10;
+   parameter INITIAL_CLOUD5_Y = 10; 
+   
+   reg [6:0] cloud6_x = 20;
+   reg [5:0] cloud6_y = 5;
+   parameter INITIAL_CLOUD6_Y = 5;
+   
+   // initial values of the x-coordinates & y-coordinates of each cloud:
+   // clouds 7 to 9 to be used for case 3
+   reg [6:0] cloud7_x = 20;
+   reg [5:0] cloud7_y = 5;
+   parameter INITIAL_CLOUD7_Y = 5; 
+   
+   reg [6:0] cloud8_x = 60;
+   reg [5:0] cloud8_y = 6;
+   parameter INITIAL_CLOUD8_Y = 6; 
+   
+   reg [6:0] cloud9_x = 80;
+   reg [5:0] cloud9_y = 10;
+   parameter INITIAL_CLOUD9_Y = 10;
+   
+   
+   
+//   initial begin 
+//      // x coordinates fixed, y coordinates varies
+      
+//      // initialise x coordinates of dino
+////      dino_x = 10;
+////      dino_y = 50;
+      
+//      // initlalise x coordinate of cactus
+//      cactus_x = 80;
+
+//   end
+   
+   // [15:0] colour --> RRRRR_GGGGGG_BBBBB;
+   
+    
+   always @ (posedge clk_25MHz) begin
+      
+      if (x >= 0 && x <= 95 && y >= 60 && y <= 63) // ground
+         oled_colour = GREEN;
+      
+      else if (x >= cloud1_x && x <= cloud1_x + 10 && y >= cloud1_y && y <= cloud1_y + 10 && (cloud_state == 0 || cloud_state == 2))
+      begin
+        case (y - cloud1_y)
+           0: oled_colour = (x - cloud1_x == 7) ? WHITE : BLACK;
+           1: oled_colour = (x - cloud1_x >= 3 && x - cloud1_x <= 10) ? WHITE : BLACK;
+           2: oled_colour = (x - cloud1_x >= 2 && x - cloud1_x <= 10) ? WHITE : BLACK;
+           3: oled_colour = (x - cloud1_x >= 3 && x - cloud1_x <= 10) ? WHITE : BLACK;
+           4: oled_colour = (x - cloud1_x >= 1 && x - cloud1_x <= 10) ? WHITE : BLACK;
+           5: oled_colour = (x - cloud1_x >= 1 && x - cloud1_x <= 10) ? WHITE : BLACK;
+           6: oled_colour = (x - cloud1_x >= 2 && x - cloud1_x <= 8) ? WHITE : BLACK;
+           7: oled_colour = (x - cloud1_x >= 2 && x - cloud1_x <= 7) ? WHITE : BLACK;
+           8: oled_colour = (x - cloud1_x >= 2 && x - cloud1_x <= 6) ? WHITE : BLACK;
+           9: oled_colour = (x - cloud1_x >= 3 && x - cloud1_x <= 5 || x - cloud1_x == 7) ? WHITE : BLACK;
+        endcase   
+        
+      end
+      
+      
+      else if (x >= cloud2_x && x <= cloud2_x + 10 && y >= cloud2_y && y <= cloud2_y + 6 && cloud_state == 2)
+      begin
+              case (y - cloud2_y)
+                 0: oled_colour = (x - cloud2_x >= 2 && x - cloud2_x <= 5) ? WHITE : BLACK;
+                 1: oled_colour = (x - cloud2_x >= 1 && x - cloud2_x <= 7) ? WHITE : BLACK;
+                 2: oled_colour = (x - cloud2_x >= 0 && x - cloud2_x <= 9) ? WHITE : BLACK;
+                 3: oled_colour = (x - cloud2_x >= 1 && x - cloud2_x <= 8) ? WHITE : BLACK;
+                 4: oled_colour = (x - cloud2_x >= 1 && x - cloud2_x <= 7) ? WHITE : BLACK;
+                 5: oled_colour = (x - cloud2_x >= 2 && x - cloud2_x <= 5) ? WHITE : BLACK;
+              endcase   
+              
+      end
+      
+      else if (x >= cloud3_x && x <= cloud3_x + 12 && y >= cloud3_y && y <= cloud3_y + 10 && (cloud_state == 0 || cloud_state == 2))
+            begin
+                    case (y - cloud3_y)
+                       0: oled_colour = (x - cloud3_x == 7) ? WHITE : BLACK;
+                       1: oled_colour = (x - cloud3_x >= 7 && x - cloud3_x <= 10) ? WHITE : BLACK;
+                       2: oled_colour = (x - cloud3_x >= 6 && x - cloud3_x <= 11) ? WHITE : BLACK;
+                       3: oled_colour = (x - cloud3_x >= 0 && x - cloud3_x <= 12) ? WHITE : BLACK;
+                       4: oled_colour = (x - cloud3_x >= 0 && x - cloud3_x <= 12) ? WHITE : BLACK;
+                       5: oled_colour = (x - cloud3_x >= 0 && x - cloud3_x <= 12) ? WHITE : BLACK;
+                       6: oled_colour = (x - cloud3_x >= 1 && x - cloud3_x <= 12) ? WHITE : BLACK;
+                       7: oled_colour = (x - cloud3_x >= 2 && x - cloud3_x <= 10) ? WHITE : BLACK;
+                       8: oled_colour = (x - cloud3_x >= 4 && x - cloud3_x <= 8) ? WHITE : BLACK;
+                       9: oled_colour = (x - cloud3_x == 6) ? WHITE : BLACK;
+                    endcase   
+                    
+            end
+            
+      else if (x >= cloud4_x && x <= cloud4_x + 10 && y >= cloud4_y && y <= cloud4_y + 10 && cloud_state == 1)
+            begin
+              case (y - cloud4_y)
+                 0: oled_colour = (x - cloud4_x == 7) ? WHITE : BLACK;
+                 1: oled_colour = (x - cloud4_x >= 3 && x - cloud4_x <= 10) ? WHITE : BLACK;
+                 2: oled_colour = (x - cloud4_x >= 2 && x - cloud4_x <= 10) ? WHITE : BLACK;
+                 3: oled_colour = (x - cloud4_x >= 3 && x - cloud4_x <= 10) ? WHITE : BLACK;
+                 4: oled_colour = (x - cloud4_x >= 1 && x - cloud4_x <= 10) ? WHITE : BLACK;
+                 5: oled_colour = (x - cloud4_x >= 1 && x - cloud4_x <= 10) ? WHITE : BLACK;
+                 6: oled_colour = (x - cloud4_x >= 2 && x - cloud4_x <= 8) ? WHITE : BLACK;
+                 7: oled_colour = (x - cloud4_x >= 2 && x - cloud4_x <= 7) ? WHITE : BLACK;
+                 8: oled_colour = (x - cloud4_x >= 2 && x - cloud4_x <= 6) ? WHITE : BLACK;
+                 9: oled_colour = (x - cloud4_x >= 3 && x - cloud4_x <= 5 || x - cloud4_x == 7) ? WHITE : BLACK;
+              endcase   
+              
+            end
+            
+            
+            else if (x >= cloud5_x && x <= cloud5_x + 10 && y >= cloud5_y && y <= cloud5_y + 6 && cloud_state == 1)
+            begin
+                    case (y - cloud5_y)
+                       0: oled_colour = (x - cloud5_x >= 2 && x - cloud5_x <= 5) ? WHITE : BLACK;
+                       1: oled_colour = (x - cloud5_x >= 1 && x - cloud5_x <= 7) ? WHITE : BLACK;
+                       2: oled_colour = (x - cloud5_x >= 0 && x - cloud5_x <= 9) ? WHITE : BLACK;
+                       3: oled_colour = (x - cloud5_x >= 1 && x - cloud5_x <= 8) ? WHITE : BLACK;
+                       4: oled_colour = (x - cloud5_x >= 1 && x - cloud5_x <= 7) ? WHITE : BLACK;
+                       5: oled_colour = (x - cloud5_x >= 2 && x - cloud5_x <= 5) ? WHITE : BLACK;
+                    endcase   
+                    
+            end
+            
+            else if (x >= cloud6_x && x <= cloud6_x + 12 && y >= cloud6_y && y <= cloud6_y + 10 && cloud_state == 1)
+                  begin
+                          case (y - cloud6_y)
+                             0: oled_colour = (x - cloud6_x == 7) ? WHITE : BLACK;
+                             1: oled_colour = (x - cloud6_x >= 7 && x - cloud6_x <= 10) ? WHITE : BLACK;
+                             2: oled_colour = (x - cloud6_x >= 6 && x - cloud6_x <= 11) ? WHITE : BLACK;
+                             3: oled_colour = (x - cloud6_x >= 0 && x - cloud6_x <= 12) ? WHITE : BLACK;
+                             4: oled_colour = (x - cloud6_x >= 0 && x - cloud6_x <= 12) ? WHITE : BLACK;
+                             5: oled_colour = (x - cloud6_x >= 0 && x - cloud6_x <= 12) ? WHITE : BLACK;
+                             6: oled_colour = (x - cloud6_x >= 1 && x - cloud6_x <= 12) ? WHITE : BLACK;
+                             7: oled_colour = (x - cloud6_x >= 2 && x - cloud6_x <= 10) ? WHITE : BLACK;
+                             8: oled_colour = (x - cloud6_x >= 4 && x - cloud6_x <= 8) ? WHITE : BLACK;
+                             9: oled_colour = (x - cloud6_x == 6) ? WHITE : BLACK;
+                          endcase   
+                          
+                  end
+                  
+                  else if (x >= cloud7_x && x <= cloud7_x + 10 && y >= cloud7_y && y <= cloud7_y + 10 && cloud_state == 3)
+                  begin
+                          case (y - cloud7_y)
+                             0: oled_colour = (x - cloud7_x == 7) ? WHITE : BLACK;
+                             1: oled_colour = (x - cloud7_x >= 3 && x - cloud7_x <= 10) ? WHITE : BLACK;
+                             2: oled_colour = (x - cloud7_x >= 2 && x - cloud7_x <= 10) ? WHITE : BLACK;
+                             3: oled_colour = (x - cloud7_x >= 3 && x - cloud7_x <= 10) ? WHITE : BLACK;
+                             4: oled_colour = (x - cloud7_x >= 1 && x - cloud7_x <= 10) ? WHITE : BLACK;
+                             5: oled_colour = (x - cloud7_x >= 1 && x - cloud7_x <= 10) ? WHITE : BLACK;
+                             6: oled_colour = (x - cloud7_x >= 2 && x - cloud7_x <= 8) ? WHITE : BLACK;
+                             7: oled_colour = (x - cloud7_x >= 2 && x - cloud7_x <= 7) ? WHITE : BLACK;
+                             8: oled_colour = (x - cloud7_x >= 2 && x - cloud7_x <= 6) ? WHITE : BLACK;
+                             9: oled_colour = (x - cloud7_x >= 3 && x - cloud7_x <= 5 || x - cloud7_x == 7) ? WHITE : BLACK;
+                          endcase   
+                          
+                 end
+                        
+                        
+                        else if (x >= cloud8_x && x <= cloud8_x + 10 && y >= cloud8_y && y <= cloud8_y + 6 && cloud_state == 3)
+                        begin
+                                case (y - cloud8_y)
+                                   0: oled_colour = (x - cloud8_x >= 2 && x - cloud8_x <= 5) ? WHITE : BLACK;
+                                   1: oled_colour = (x - cloud8_x >= 1 && x - cloud8_x <= 7) ? WHITE : BLACK;
+                                   2: oled_colour = (x - cloud8_x >= 0 && x - cloud8_x <= 9) ? WHITE : BLACK;
+                                   3: oled_colour = (x - cloud8_x >= 1 && x - cloud8_x <= 8) ? WHITE : BLACK;
+                                   4: oled_colour = (x - cloud8_x >= 1 && x - cloud8_x <= 7) ? WHITE : BLACK;
+                                   5: oled_colour = (x - cloud8_x >= 2 && x - cloud8_x <= 5) ? WHITE : BLACK;
+                                endcase   
+                                
+                        end
+                        
+                        else if (x >= cloud9_x && x <= cloud9_x + 12 && y >= cloud9_y && y <= cloud9_y + 10 && cloud_state == 3)
+                              begin
+                                      case (y - cloud9_y)
+                                         0: oled_colour = (x - cloud9_x == 7) ? WHITE : BLACK;
+                                         1: oled_colour = (x - cloud9_x >= 7 && x - cloud9_x <= 10) ? WHITE : BLACK;
+                                         2: oled_colour = (x - cloud9_x >= 6 && x - cloud9_x <= 11) ? WHITE : BLACK;
+                                         3: oled_colour = (x - cloud9_x >= 0 && x - cloud9_x <= 12) ? WHITE : BLACK;
+                                         4: oled_colour = (x - cloud9_x >= 0 && x - cloud9_x <= 12) ? WHITE : BLACK;
+                                         5: oled_colour = (x - cloud9_x >= 0 && x - cloud9_x <= 12) ? WHITE : BLACK;
+                                         6: oled_colour = (x - cloud9_x >= 1 && x - cloud9_x <= 12) ? WHITE : BLACK;
+                                         7: oled_colour = (x - cloud9_x >= 2 && x - cloud9_x <= 10) ? WHITE : BLACK;
+                                         8: oled_colour = (x - cloud9_x >= 4 && x - cloud9_x <= 8) ? WHITE : BLACK;
+                                         9: oled_colour = (x - cloud9_x == 6) ? WHITE : BLACK;
+                                      endcase   
+                                      
+                              end
+     
+       // design of dino when standing
+       
+       // design of dino, use if...else block, not an if chain, not sure why
+       
+       // smaller dino:
+       else if (x >= dino_x && x <= dino_x + 21 && y >= dino_y && y <= dino_y + 22 && dino_state == 0)
+       begin
+          dino_type <= dino_state;
+          case (y - dino_y)
+          0: oled_colour = (x - dino_x >= 13 && x - dino_x <= 17) ? WHITE : BLACK;
+          1: oled_colour = (x - dino_x >= 12 && x - dino_x <= 19) ? WHITE : BLACK;
+          2: oled_colour = ( (x - dino_x >= 12 && x - dino_x <= 13) || (x - dino_x >= 15 && x - dino_x <= 19) ) ? WHITE : BLACK;
+          3: oled_colour = (x - dino_x >= 12 && x - dino_x <= 19) ? WHITE : BLACK;
+          4: oled_colour = (x - dino_x >= 12 && x - dino_x <= 19) ? WHITE : BLACK;
+          5: oled_colour = (x - dino_x >= 12 && x - dino_x <= 15) ? WHITE : BLACK;
+          6: oled_colour = (x - dino_x >= 12 && x - dino_x <= 18) ? WHITE : BLACK;
+          7: oled_colour = ((x - dino_x >= 0 && x - dino_x <= 1) || (x - dino_x >= 10 && x - dino_x <= 16)) ? WHITE : BLACK;
+          8: oled_colour = ((x - dino_x >= 0 && x - dino_x <= 3) || (x - dino_x >= 10 && x - dino_x <= 20)) ? WHITE : BLACK;
+          9: oled_colour = ((x - dino_x >= 1 && x - dino_x <= 3) || (x - dino_x >= 9 && x - dino_x <= 16) || (x - dino_x == 20)) ? WHITE : BLACK;
+          10: oled_colour = ((x - dino_x >= 2 && x - dino_x <= 6) || (x - dino_x >= 8 && x - dino_x <= 16)) ? WHITE : BLACK;
+          11: oled_colour = (x - dino_x >= 4 && x - dino_x <= 16) ? WHITE : BLACK;
+          12: oled_colour = (x - dino_x >= 5 && x - dino_x <= 16) ? WHITE : BLACK;
+          13: oled_colour = (x - dino_x >= 8 && x - dino_x <= 14) ? WHITE : BLACK;
+          14: oled_colour = (x - dino_x >= 8 && x - dino_x <= 14) ? WHITE : BLACK;
+          15: oled_colour = ((x - dino_x >= 8 && x - dino_x <= 10) || (x - dino_x >= 13 && x - dino_x <= 14)) ? WHITE : BLACK;
+          16: oled_colour = ((x - dino_x >= 7 && x - dino_x <= 9) || (x - dino_x >= 13 && x - dino_x <= 14)) ? WHITE : BLACK;
+          17: oled_colour = ((x - dino_x >= 7 && x - dino_x <= 8) || (x - dino_x >= 13 && x - dino_x <= 14)) ? WHITE : BLACK;
+          18: oled_colour = ((x - dino_x >= 7 && x - dino_x <= 8) || (x - dino_x >= 13 && x - dino_x <= 14)) ? WHITE : BLACK;
+          19: oled_colour = ((x - dino_x >= 6 && x - dino_x <= 8) || (x - dino_x >= 12 && x - dino_x <= 14)) ? WHITE : BLACK;
+          20: oled_colour = ((x - dino_x >= 6 && x - dino_x <= 8) || (x - dino_x >= 12 && x - dino_x <= 14)) ? WHITE : BLACK;
+          21: oled_colour = ((x - dino_x >= 6 && x - dino_x <= 9) || (x - dino_x >= 12 && x - dino_x <= 15)) ? WHITE : BLACK;
+          
+          
+          endcase
+       
+       
+       
+       end
+       
+
+       // dino is standing
+       
+//       else if (x >= dino_x && x <= dino_x + 28 && y >= dino_y && y <= dino_y + 30 && dino_state == 0)
+//       begin
+//          case (y - dino_y)
+//                    0: oled_colour = (x - dino_x >= 16 && x - dino_x <= 24) ? WHITE : BLACK;
+//                    1: oled_colour = (x - dino_x >= 15 && x - dino_x <= 25) ? WHITE : BLACK;
+//                    2: oled_colour = ((x - dino_x >= 15 && x - dino_x <= 16) || (x - dino_x >= 19 && x - dino_x <= 25)) ? WHITE : BLACK;
+//                    3: oled_colour = ((x - dino_x >= 15 && x - dino_x <= 16) || (x - dino_x >= 19 && x - dino_x <= 25)) ? WHITE : BLACK;
+//                    4: oled_colour = (x - dino_x >= 15 && x - dino_x <= 25) ? WHITE : BLACK;
+//                    5: oled_colour = (x - dino_x >= 15 && x - dino_x <= 25) ? WHITE : BLACK;
+//                    6: oled_colour = (x - dino_x >= 15 && x - dino_x <= 25) ? WHITE : BLACK;
+//                    7: oled_colour = (x - dino_x >= 15 && x - dino_x <= 20) ? WHITE : BLACK;
+//                    8: oled_colour = (x - dino_x >= 15 && x - dino_x <= 23) ? WHITE : BLACK;
+//                    9: oled_colour = (x - dino_x >= 13 && x - dino_x <= 21) ? WHITE : BLACK;
+//                    10: oled_colour = ((x - dino_x >= 12 && x - dino_x <= 28) || (x - dino_x >= 1 && x - dino_x <= 3)) ? WHITE : BLACK;
+//                    11: oled_colour = ( (x - dino_x >= 11 && x - dino_x <= 28) || (x - dino_x >= 1 && x - dino_x <= 3)) ? WHITE : BLACK;
+//                    12: oled_colour = ((x - dino_x >= 10 && x - dino_x <= 21) || (x - dino_x == 28) || ((x - dino_x >= 2 && x - dino_x <= 5))) ? WHITE : BLACK;
+//                    13: oled_colour = ((x - dino_x >= 9 && x - dino_x <= 21) || (x - dino_x >= 2 && x - dino_x <= 5)) ? WHITE : BLACK; 
+//                    14: oled_colour = ((x - dino_x >= 8 && x - dino_x <= 21) || (x - dino_x >= 3 && x - dino_x <= 6)) ? WHITE : BLACK;
+//                    15: oled_colour = (x - dino_x >= 4 && x - dino_x <= 21) ? WHITE : BLACK;
+//                    16: oled_colour = (x - dino_x >= 4 && x - dino_x <= 21) ? WHITE : BLACK;
+//                    17: oled_colour = (x - dino_x >= 7 && x - dino_x <= 19) ? WHITE : BLACK;
+//                    18: oled_colour = (x - dino_x >= 8 && x - dino_x <= 19) ? WHITE : BLACK;
+//                    19: oled_colour = (x - dino_x >= 9 && x - dino_x <= 19) ? WHITE : BLACK;
+//                    20: oled_colour = (x - dino_x >= 9 && x - dino_x <= 19) ? WHITE : BLACK; 
+//                    21: oled_colour = (x - dino_x >= 9 && x - dino_x <= 19) ? WHITE : BLACK; 
+//                    22: oled_colour = ((x - dino_x >= 9 && x - dino_x <= 14) || (x - dino_x >= 17 && x - dino_x <= 19)) ? WHITE : BLACK;
+//                    23: oled_colour = ((x - dino_x >= 9 && x - dino_x <= 12) || (x - dino_x >= 17 && x - dino_x <= 19) ) ? WHITE : BLACK;
+//                    24: oled_colour = ( (x - dino_x >= 9 && x - dino_x <= 11) || (x - dino_x >= 17 && x - dino_x <= 19) ) ? WHITE : BLACK;
+//                    25: oled_colour = ( (x - dino_x >= 9 && x - dino_x <= 10) || (x - dino_x >= 17 && x - dino_x <= 19) ) ? WHITE : BLACK;
+//                    26: oled_colour = ( (x - dino_x >= 8 && x - dino_x <= 10) || (x - dino_x >= 17 && x - dino_x <= 19) ) ? WHITE : BLACK;
+//                    27: oled_colour = ( (x - dino_x >= 8 && x - dino_x <= 10) || (x - dino_x >= 17 && x - dino_x <= 18) ) ? WHITE : BLACK; 
+//                    28: oled_colour =  (x - dino_x >= 8 && x - dino_x <= 12) || (x - dino_x >= 17 && x - dino_x <= 21) ? WHITE : BLACK; 
+//                    29: oled_colour =  (x - dino_x >= 8 && x - dino_x <= 12) || (x - dino_x >= 17 && x - dino_x <= 21) ? WHITE : BLACK; 
+
+//            endcase 
+//          end
+          
+       // smaller ducking dino:
+       
+       else if (x >= dino_x && x <= dino_x + 20 && y >= dino_y + 9 && y <= dino_y + 13 + 9 && dino_state == 1)
+       begin
+           dino_type <= dino_state;
+         case (y - (dino_y + 9))
+           0: oled_colour = ((x - dino_x >= 0 && x - dino_x <= 1) || (x - dino_x >= 15 && x - dino_x <= 18)) ? WHITE : BLACK;
+           1: oled_colour = ((x - dino_x >= 0 && x - dino_x <= 2) || (x - dino_x >= 13 && x - dino_x <= 20)) ? WHITE : BLACK;
+           2: oled_colour = ((x - dino_x >= 0 && x - dino_x <= 3) || (x - dino_x >= 13 && x - dino_x <= 14) || (x - dino_x >= 16 && x - dino_x <= 20)) ? WHITE : BLACK;
+           3: oled_colour = ((x - dino_x >= 1 && x - dino_x <= 5) || (x - dino_x >= 13 && x - dino_x <= 20)) ? WHITE : BLACK;
+           4: oled_colour = ((x - dino_x >= 1 && x - dino_x <= 10) || (x - dino_x >= 13 && x - dino_x <= 20)) ? WHITE : BLACK;
+           5: oled_colour = (x - dino_x >= 2 && x - dino_x <= 17) ? WHITE : BLACK;
+           6: oled_colour = ((x - dino_x == 2) || (x - dino_x >= 4 && x - dino_x <= 19) ) ? WHITE : BLACK;
+           7: oled_colour = ((x - dino_x == 2) || (x - dino_x >= 4 && x - dino_x <= 17) ) ? WHITE : BLACK;
+           8: oled_colour = ((x - dino_x >= 2 && x - dino_x <= 3) || (x - dino_x >= 5 && x - dino_x <= 16)) ? WHITE : BLACK;
+           9: oled_colour = ((x - dino_x >= 6 && x - dino_x <= 7) || (x - dino_x == 10) || (x - dino_x >= 14 && x - dino_x <= 15)) ? WHITE : BLACK;
+           10: oled_colour = ((x - dino_x >= 5 && x - dino_x <= 7) || (x - dino_x >= 10 && x - dino_x <= 11) || (x - dino_x >= 13 && x - dino_x <= 15)) ? WHITE : BLACK;
+           11: oled_colour = ((x - dino_x >= 5 && x - dino_x <= 8) || (x - dino_x >= 10 && x - dino_x <= 11) || (x - dino_x >= 13 && x - dino_x <= 15)) ? WHITE : BLACK;
+           12: oled_colour = ((x - dino_x >= 5 && x - dino_x <= 8) || (x - dino_x >= 13 && x - dino_x <= 16)) ? WHITE : BLACK;
+         
+         endcase
+       
+       
+       
+       end   
+          
+//       // dino does ducking action   
+//       else if (x >= dino_x && x <= dino_x + 26 && y >= dino_y + 13 && y <= dino_y + 31 && dino_state == 1)
+//       begin
+//         case (y - (dino_y + 13)) // replace dino_y with (dino_y + 13) in the if statement and case conditions to shift dino down by 13 units as it is in duck state (graphical transformation):
+//           0: oled_colour = (x - dino_x == 1) ? WHITE : BLACK;
+//           1: oled_colour = (x - dino_x >= 1 && x - dino_x <= 3) ? WHITE : BLACK;
+//           2: oled_colour = ( (x - dino_x >= 1 && x - dino_x <= 5) || (x - dino_x >= 11 && x - dino_x <= 17) || (x - dino_x >= 21 && x - dino_x <= 25) ) ? WHITE : BLACK;
+//           3: oled_colour =  ( (x - dino_x >= 1 && x - dino_x <= 18) || (x - dino_x >= 20 && x - dino_x <= 26)) ? WHITE : BLACK;
+//           4: oled_colour =  ( (x - dino_x >= 1 && x - dino_x <= 21) || (x - dino_x >= 23 && x - dino_x <= 26)) ? WHITE : BLACK;
+//           5: oled_colour = (x - dino_x >= 2 && x - dino_x <= 26) ? WHITE : BLACK;
+//           6: oled_colour = (x - dino_x >= 3 && x - dino_x <= 26) ? WHITE : BLACK;
+//           7: oled_colour = ( (x - dino_x >= 4 && x - dino_x <= 16) || (x - dino_x >= 20 && x - dino_x <= 21)) ? WHITE : BLACK;
+//           8: oled_colour = ( (x - dino_x >= 4 && x - dino_x <= 15) || (x - dino_x >= 20 && x - dino_x <= 26)) ? WHITE : BLACK;
+//           9: oled_colour = ( (x - dino_x == 4) || (x - dino_x >= 6 && x - dino_x <= 15)) ? WHITE : BLACK;
+//           10: oled_colour = ( (x - dino_x >= 4 && x - dino_x <= 5) || (x - dino_x >= 7 && x - dino_x <= 15)) ? WHITE : BLACK;
+//           11: oled_colour = ( (x - dino_x >= 4 && x - dino_x <= 5) || (x - dino_x >= 8 && x - dino_x <= 10) || (x - dino_x >= 12 && x - dino_x <= 15) ) ? WHITE : BLACK;
+//           12: oled_colour = ( (x - dino_x >= 8 && x - dino_x <= 10) || (x - dino_x >= 13 && x - dino_x <= 14)) ? WHITE : BLACK;
+//           13: oled_colour = ( (x - dino_x >= 8 && x - dino_x <= 11) || (x - dino_x >= 13 && x - dino_x <= 14)) ? WHITE : BLACK;
+//           14: oled_colour = ( (x - dino_x >= 7 && x - dino_x <= 9) || (x - dino_x >= 13 && x - dino_x <= 15)) ? WHITE : BLACK;  
+//           15: oled_colour = ( (x - dino_x >= 7 && x - dino_x <= 9) || (x - dino_x >= 13 && x - dino_x <= 16) ) ? WHITE : BLACK;  
+//           16: oled_colour = ( (x - dino_x >= 8 && x - dino_x <= 9) || (x - dino_x >= 14 && x - dino_x <= 16) ) ? WHITE : BLACK;  
+//           17: oled_colour = (x - dino_x >= 8 && x - dino_x <= 10) ? WHITE : BLACK;
+//         endcase
+        
+       
+        
+        
+       
+//       end
+
+                         
+                         
+        
+        
+    //   else if (x >= cactus_x && x < cactus_x + 10 && y >= 50 && y <= 59) begin
+       //  case(cactus_type)
+                 // 1: // cactus with 3 lines on top
+                 // begin
+                    // Draw the cactus body as a box
+                 //   if (y >= 53 && y <= 59) begin // body of the cactus
+//oled_colour = RED; // Cactus body
+                   // end
+                    // Draw 3 lines on top
+                   // else if (y >= 50 && y < 53) begin
+                   //    oled_colour = (x == cactus_x + 2 || x == cactus_x + 5 || x == cactus_x + 8) ? RED : 0; // Lines
+                  //  end
+                 /// end
+                  
+                 // 2: // cactus with 4 lines on top
+                 // begin
+                    // Draw the cactus body as a box
+                    //if (y >= 53 && y <= 59) begin // body of the cactus
+                       //oled_colour = RED; // Cactus body
+                    //end
+                    // Draw 4 lines on top
+                   // else if (y >= 50 && y < 54) begin
+                      // oled_colour = (x == cactus_x + 2 || x == cactus_x + 4 || x == cactus_x + 6 || x == cactus_x + 8) ? RED : 0; // First set of lines
+                   // end
+                    //else if (y >= 54 && y < 58) begin
+                       //oled_colour = (x == cactus_x + 3 || x == cactus_x + 6) ? RED : 0; // Second set of lines
+                   // end
+                 // end
+                  
+                 // default: oled_colour = BLACK; // No cactus
+               // endcase
+          // end
+
+          
+//      else if (x >= cactus_x && x < cactus_x + 10 && y >= 50 & y <= 59) begin // cactus, represented as a box, y coordinates are fixed
+//         oled_colour = RED;
+//      end
+       
+       else begin
+          oled_colour = BLACK; // rest of the screen is black
+       end 
+          
+
+   end
+   
+always @ (posedge clk_100Hz) begin // use 100Hz to control the states
+   
+      
+     // cactus_x <= cactus_x - 1; // cactus moves at a rate of one pixel
+      
+      // adjusting cactus state:
+      
+    //cactus_type <= (cactus_x == 90) ? ((cactus_type == 1) ? 2 : 1) : cactus_type;
+      
+      // adjusting dino_state:
+      
+      // additional LED conditions
+
+//      dino_state <= (LED[0] && LED[15] && btnd_pressed)? 1 : 0;
+      
+      // Works:
+       dino_state <= ( (LED[0] && LED[15] || (!LED[0] || !LED[15]) ) && btnd_pressed && !btnc_pressed )? 1 : 0;
+  
+    end    
+      
+      
+      // dino remains in state 1 even after btnd is released!!!
+      
+//      if (LED[0] && LED[15] && btnd_pressed && !btnc_pressed)
+//         dino_state <= 1; // dino ducks
+//      else if ( (!LED[0] || !LED[15]) && btnd_pressed && !btnc_pressed)
+//         dino_state <= 1; // dino ducks
+         
+//      else if ( (!LED[0] || !LED[15]) && btnd_pressed && btnc_pressed)
+//         dino_state <= 0; // dino is normal
+
+ 
+      
+//      dino_state <= ( btnd_pressed && ( (LED[0] && LED[15]) || (!LED[0] || !LED[15]) ) ) ? 1 : 0;
+      
+//      // codes to control  
+//       if (cactus_x == 90) begin // when cactus leaves the screen --> can adjust this number     
+//          if (cactus_type == 1) begin
+//              cactus_type <= 2;
+//          end   
+            
+//          else begin
+//              cactus_type <= 1;
+//          end
+
+//       end
+       
+       
+       
+//       if (btnd_pressed)
+//          dino_state <= 1;
+//       else if (!btnd_pressed)
+//          dino_state <= 0;
+       
+       
+   
+   reg cloud1_direction = 1; // 1 for moving down, 0 for moving up
+   reg cloud2_direction = 1;
+   reg cloud3_direction = 1;
+   
+   reg cloud4_direction = 1;
+   reg cloud5_direction = 1;
+   reg cloud6_direction = 1;
+   
+   reg cloud7_direction = 1;
+   reg cloud8_direction = 1;
+   reg cloud9_direction = 1;
+   
+   
+always @ (posedge clk_50Hz)
+   begin
+       
+    if (cloud_state == 0 || cloud_state == 2)
+    begin
+     // Move clouds horizontally
+     cloud1_x <= cloud1_x - 1;
+     cloud2_x <= cloud2_x - 1;
+     cloud3_x <= cloud3_x - 1;
+     
+     
+     // WORKS:
+     
+     // Control cloud1's vertical movement
+     if (cloud1_direction) begin // chnaged to 20 to test
+         cloud1_y <= (cloud1_y < INITIAL_CLOUD1_Y + 4) ? cloud1_y + 1 : cloud1_y;
+         
+         cloud1_direction <= (cloud1_y < INITIAL_CLOUD1_Y + 4) ? 1 : 0;
+     
+     end
+     
+     else if (!cloud1_direction) begin
+        cloud1_y <= (cloud1_y > INITIAL_CLOUD1_Y - 4) ? cloud1_y - 1 : cloud1_y;
+        cloud1_direction <= (cloud1_y > INITIAL_CLOUD1_Y - 4) ? 0 : 1;
+     
+     end
+     
+     // Control cloud2's vertical movement
+          if (cloud2_direction) begin
+              cloud2_y <= (cloud2_y < INITIAL_CLOUD2_Y + 5) ? cloud2_y + 1 : cloud2_y;
+              
+              cloud2_direction <= (cloud2_y < INITIAL_CLOUD2_Y + 5) ? 1 : 0;
+          
+          end
+          
+          else if (!cloud2_direction) begin
+             cloud2_y <= (cloud2_y > INITIAL_CLOUD2_Y - 5) ? cloud2_y - 1 : cloud2_y;
+             cloud2_direction <= (cloud2_y > INITIAL_CLOUD2_Y - 5) ? 0 : 1;
+          
+          end
+     
+           // Control cloud3's vertical movement
+               if (cloud3_direction) begin
+                   cloud3_y <= (cloud3_y < INITIAL_CLOUD3_Y + 6) ? cloud3_y + 1 : cloud3_y;
+                   
+                   cloud3_direction <= (cloud3_y < INITIAL_CLOUD3_Y - 5) ? 1 : 0;
+               
+               end
+               
+               else if (!cloud3_direction) begin
+                  cloud3_y <= (cloud3_y > INITIAL_CLOUD3_Y - 5) ? cloud3_y - 1 : cloud3_y;
+                  cloud3_direction <= (cloud3_y > INITIAL_CLOUD3_Y - 5) ? 0 : 1;
+               
+               end
+               
+            end // end of game_state == 0 && game_state == 2
+          
+          
+          else if (cloud_state == 1)
+          begin
+          // Move clouds horizontally
+          cloud4_x <= cloud4_x - 1;
+          cloud5_x <= cloud5_x - 2;
+          cloud6_x <= cloud6_x - 3; 
+           
+            // Control cloud4's vertical movement
+                 if (cloud4_direction) begin // chnaged to 20 to test
+                     cloud4_y <= (cloud4_y < INITIAL_CLOUD4_Y + 4) ? cloud4_y + 1 : cloud4_y;
+                     
+                     cloud4_direction <= (cloud4_y < INITIAL_CLOUD4_Y + 4) ? 1 : 0;
+                 
+                 end
+                 
+                 else if (!cloud4_direction) begin
+                    cloud4_y <= (cloud4_y > INITIAL_CLOUD4_Y - 4) ? cloud4_y - 1 : cloud4_y;
+                    cloud4_direction <= (cloud4_y > INITIAL_CLOUD4_Y - 4) ? 0 : 1;
+                 
+                 end
+                 
+                 // Control cloud5's vertical movement
+                      if (cloud5_direction) begin
+                          cloud5_y <= (cloud5_y < INITIAL_CLOUD5_Y + 5) ? cloud5_y + 1 : cloud5_y;
+                          
+                          cloud5_direction <= (cloud5_y < INITIAL_CLOUD5_Y + 5) ? 1 : 0;
+                      
+                      end
+                      
+                      else if (!cloud5_direction) begin
+                         cloud5_y <= (cloud5_y > INITIAL_CLOUD5_Y - 5) ? cloud5_y - 1 : cloud5_y;
+                         cloud5_direction <= (cloud5_y > INITIAL_CLOUD5_Y - 5) ? 0 : 1;
+                      
+                      end
+                 
+                       // Control cloud6's vertical movement
+                           if (cloud6_direction) begin
+                               cloud6_y <= (cloud6_y < INITIAL_CLOUD6_Y + 6) ? cloud6_y + 1 : cloud6_y;
+                               
+                               cloud6_direction <= (cloud6_y < INITIAL_CLOUD6_Y - 5) ? 1 : 0;
+                           
+                           end
+                           
+                           else if (!cloud6_direction) begin
+                              cloud6_y <= (cloud6_y > INITIAL_CLOUD6_Y - 5) ? cloud6_y - 1 : cloud6_y;
+                              cloud6_direction <= (cloud6_y > INITIAL_CLOUD6_Y - 5) ? 0 : 1;
+                           
+                           end
+                           
+                end // end of game_state == 1 
+ 
+           else if (cloud_state == 3)
+                begin
+                // Move clouds horizontally
+                cloud7_x <= cloud7_x - 2;
+                cloud8_x <= cloud8_x - 1;
+                cloud9_x <= cloud9_x - 1;  
+                 
+                  // Control cloud7's vertical movement
+                       if (cloud7_direction) begin // chnaged to 20 to test
+                           cloud7_y <= (cloud7_y < INITIAL_CLOUD7_Y + 4) ? cloud7_y + 1 : cloud7_y;
+                           
+                           cloud7_direction <= (cloud7_y < INITIAL_CLOUD7_Y + 4) ? 1 : 0;
+                       
+                       end
+                       
+                       else if (!cloud7_direction) begin
+                          cloud7_y <= (cloud7_y > INITIAL_CLOUD7_Y - 4) ? cloud7_y - 1 : cloud7_y;
+                          cloud7_direction <= (cloud7_y > INITIAL_CLOUD7_Y - 4) ? 0 : 1;
+                       
+                       end
+                       
+                       // Control cloud8's vertical movement
+                            if (cloud8_direction) begin
+                                cloud8_y <= (cloud8_y < INITIAL_CLOUD8_Y + 5) ? cloud8_y + 1 : cloud8_y;
+                                
+                                cloud8_direction <= (cloud8_y < INITIAL_CLOUD8_Y + 5) ? 1 : 0;
+                            
+                            end
+                            
+                            else if (!cloud8_direction) begin
+                               cloud8_y <= (cloud8_y > INITIAL_CLOUD8_Y - 5) ? cloud8_y - 1 : cloud8_y;
+                               cloud8_direction <= (cloud8_y > INITIAL_CLOUD8_Y - 5) ? 0 : 1;
+                            
+                            end
+                       
+                             // Control cloud9's vertical movement
+                                 if (cloud9_direction) begin
+                                     cloud9_y <= (cloud9_y < INITIAL_CLOUD9_Y + 6) ? cloud9_y + 1 : cloud9_y;
+                                     
+                                     cloud9_direction <= (cloud9_y < INITIAL_CLOUD9_Y - 5) ? 1 : 0;
+                                 
+                                 end
+                                 
+                                 else if (!cloud9_direction) begin
+                                    cloud9_y <= (cloud9_y > INITIAL_CLOUD9_Y - 5) ? cloud9_y - 1 : cloud9_y;
+                                    cloud9_direction <= (cloud9_y > INITIAL_CLOUD9_Y - 5) ? 0 : 1;
+                                 
+                                 end
+                                 
+               end // end of game_state == 3
+          
+
+        end
+    
+endmodule
+
+//      else if (x >= dino_x && x <= dino_x + 10 && y >= dino_y && y <= dino_y + 10) // dinosaur, represented as a box
+//         oled_colour = 16'b11111_111111_11111; 
+
+
+//else if (x >= dino_x && x <= dino_x + 12 && y >= dino_y && y <= dino_y + 16) begin // dinosaur, represented as a box
+//         case (y - dino_y)
+//           0: oled_colour = (x - dino_x == 2 || x - dino_x == 11) ? WHITE : 0;
+//           1: oled_colour = (x - dino_x == 2 || x - dino_x == 11 || x - dino_x == 3 || x - dino_x == 10) ? WHITE : 0; 
+//           2: oled_colour = (x - dino_x == 2 || x - dino_x == 11 || x - dino_x == 3 || x - dino_x == 10) ? WHITE : 0;
+//           3: oled_colour = (x - dino_x >= 3 && x - dino_x <= 10) ? WHITE : 0;
+//           4: oled_colour = (x - dino_x >= 3 && x - dino_x <= 11) ? WHITE : 0;
+//           5: oled_colour = (x - dino_x >= 2 && x - dino_x <= 11) ? WHITE : 0;
+//           6: oled_colour = (x - dino_x >= 2 && x - dino_x <= 11) ? WHITE : 0;
+//           7: oled_colour = (x - dino_x >= 2 && x - dino_x <= 11) ? WHITE : 0;
+//           8: oled_colour = (x - dino_x == 2 || x - dino_x == 11 || x - dino_x == 3 || x - dino_x == 10) ? WHITE : 0; 
+//           9: oled_colour = (x - dino_x == 2 || x - dino_x == 11 || x - dino_x == 3 || x - dino_x == 10) ? WHITE : 0;
+//           10: oled_colour = (x - dino_x == 2 || x - dino_x == 11 || x - dino_x == 3 || x - dino_x == 10) ? WHITE : 0;
+//           11: oled_colour = (x - dino_x == 1 || x - dino_x == 2) ? WHITE : 0;
+//           12: oled_colour = (x - dino_x == 0 || x - dino_x == 1) ? WHITE : 0;
+//           13: oled_colour = (x - dino_x == 0) ? WHITE : 0;
+//           default: oled_colour = 0;
+         
+         
+//         endcase
+         
+//        end
+
+
+//if (x >= dino_x && x <= dino_x + 46 && y >= dino_y && y <= dino_y + 43) begin 
+//             case (y - dino_y)
+//                 1: oled_colour = (x - dino_x >= 27 && x - dino_x <= 42) ? WHITE : BLACK;
+//                 2: oled_colour = (x - dino_x >= 27 && x - dino_x <= 42) ? WHITE : BLACK;
+//                 3: oled_colour = (x - dino_x >= 27 && x - dino_x <= 42) ? WHITE : BLACK;
+//                 4: oled_colour = (x - dino_x >= 24 && x - dino_x <=28 || (x - dino_x >= 31 && x - dino_x <=45)) ? WHITE : BLACK;
+//                 5: oled_colour = (x - dino_x >= 24 && x - dino_x <=28 || (x - dino_x >= 31 && x - dino_x <=45)) ? WHITE : BLACK;
+//                 6: oled_colour = (x - dino_x >= 24 && x - dino_x <=28 || (x - dino_x >= 31 && x - dino_x <=45)) ? WHITE : BLACK;
+//                 7: oled_colour = (x - dino_x >= 24 && x - dino_x <=45) ? WHITE : BLACK;
+//                 8: oled_colour = (x - dino_x >= 24 && x - dino_x <=45) ? WHITE : BLACK;
+//                 9: oled_colour = (x - dino_x >= 24 && x - dino_x <=45) ? WHITE : BLACK;
+//                 10: oled_colour = (x - dino_x >= 24 && x - dino_x <=45) ? WHITE : BLACK;
+//                 11: oled_colour = (x - dino_x >= 24 && x - dino_x <=45) ? WHITE : BLACK;
+//                 12: oled_colour = (x - dino_x >= 24 && x - dino_x <=45) ? WHITE : BLACK;
+//                 13: oled_colour = (x - dino_x >= 24 && x - dino_x <=33) ? WHITE : BLACK;
+//                 14: oled_colour = ((x - dino_x >= 3 && x - dino_x <= 4) || (x - dino_x >= 21 && x - dino_x <=33)) ? WHITE : BLACK;
+//                 15: oled_colour = ((x - dino_x >= 3 && x - dino_x <= 4) || (x - dino_x >= 21 && x - dino_x <=41)) ? WHITE : BLACK;
+//                 16: oled_colour = ((x - dino_x >= 3 && x - dino_x <= 4) || (x - dino_x >= 19 && x - dino_x <=41)) ? WHITE : BLACK;
+//                 17: oled_colour = ((x - dino_x >= 3 && x - dino_x <= 6) || (x - dino_x >= 19 && x - dino_x <=31)) ? WHITE : BLACK;
+//                 18: oled_colour = ((x - dino_x >= 3 && x - dino_x <= 6) || (x - dino_x >= 17 && x - dino_x <=31)) ? WHITE : BLACK;
+//                 19: oled_colour = ((x - dino_x >= 3 && x - dino_x <= 8) || (x - dino_x >= 17 && x - dino_x <=36)) ? WHITE : BLACK;
+//                 20: oled_colour = ((x - dino_x >= 3 && x - dino_x <= 8) || (x - dino_x >= 15 && x - dino_x <=36)) ? WHITE : BLACK;
+//                 21: oled_colour = ((x - dino_x >= 3 && x - dino_x <= 11) || (x - dino_x >= 15 && x - dino_x <=31) || (x - dino_x >= 35 && x - dino_x <=36)) ? WHITE : BLACK;
+//                 22: oled_colour = ((x - dino_x >= 3 && x - dino_x <= 31) || (x - dino_x >= 35 && x - dino_x <=36)) ? WHITE : BLACK;
+//                 23: oled_colour = (x - dino_x >= 3 && x - dino_x <= 31) ? WHITE : BLACK;
+//                 24: oled_colour = (x - dino_x >= 5 && x - dino_x <= 31) ? WHITE : BLACK;
+//                 25: oled_colour = (x - dino_x >= 5 && x - dino_x <= 31) ? WHITE : BLACK;
+//                 26: oled_colour = (x - dino_x >= 7 && x - dino_x <= 31) ? WHITE : BLACK;
+//                 27: oled_colour = (x - dino_x >= 7 && x - dino_x <= 31) ? WHITE : BLACK;
+//                 28: oled_colour = (x - dino_x >= 7 && x - dino_x <= 31) ? WHITE : BLACK;
+//                 29: oled_colour = (x - dino_x >= 11 && x - dino_x <= 31) ? WHITE : BLACK;
+//                 30: oled_colour = (x - dino_x >= 11 && x - dino_x <= 29) ? WHITE : BLACK;
+//                 31: oled_colour = (x - dino_x >= 11 && x - dino_x <= 29) ? WHITE : BLACK;
+//                 32: oled_colour = (x - dino_x >= 11 && x - dino_x <= 27) ? WHITE : BLACK;
+//                 33: oled_colour = (x - dino_x >= 11 && x - dino_x <= 27) ? WHITE : BLACK;
+//                 34: oled_colour = ((x - dino_x >= 11 && x - dino_x <= 19) || (x - dino_x >= 22 && x - dino_x <=25)) ? WHITE : BLACK;
+//                 35: oled_colour = ((x - dino_x >= 13 && x - dino_x <= 19) || (x - dino_x >= 22 && x - dino_x <=25)) ? WHITE : BLACK;
+//                 36: oled_colour = ((x - dino_x >= 13 && x - dino_x <= 19) || (x - dino_x >= 22 && x - dino_x <=25)) ? WHITE : BLACK;
+//                 37: oled_colour = ((x - dino_x >= 13 && x - dino_x <= 17) || (x - dino_x >= 24 && x - dino_x <=25)) ? WHITE : BLACK;
+//                 38: oled_colour = ((x - dino_x >= 13 && x - dino_x <= 17) || (x - dino_x >= 24 && x - dino_x <=25)) ? WHITE : BLACK;
+//                 39: oled_colour = ((x - dino_x >= 13 && x - dino_x <= 17) || (x - dino_x >= 24 && x - dino_x <=25)) ? WHITE : BLACK;
+//                 40: oled_colour = ((x - dino_x >= 13 && x - dino_x <= 14) || (x - dino_x >= 24 && x - dino_x <=25)) ? WHITE : BLACK;
+//                 41: oled_colour = ((x - dino_x >= 13 && x - dino_x <= 14) || (x - dino_x >= 24 && x - dino_x <=25)) ? WHITE : BLACK;
+//                 42: oled_colour = ((x - dino_x >= 13 && x - dino_x <= 17) || (x - dino_x >= 24 && x - dino_x <=28)) ? WHITE : BLACK;
+//                 43: oled_colour = ((x - dino_x >= 13 && x - dino_x <= 17) || (x - dino_x >= 24 && x - dino_x <=28)) ? WHITE : BLACK;
+//                 default: oled_colour = WHITE;
+//             endcase               
+//         end
+
+
+
+
+//   always @ (posedge clk_50Hz)
+//   begin
+   
+//         cloud1_x <= cloud1_x - 1;
+//         cloud2_x <= cloud2_x - 1;
+//         cloud3_x <= cloud3_x - 1;
+         
+//         if (cloud1_direction && cloud1_y <= INITIAL_CLOUD1_Y + 20) // cloud is moving down, y - coordinate increases
+//         begin
+//            cloud1_y <= cloud1_y + 1;
+            
+//            if (cloud1_y >= INITIAL_CLOUD1_Y + 20) // can put outside
+//                cloud1_direction <= 0;
+
+//         end 
+         
+//         else if (!cloud1_direction && cloud1_y >= INITIAL_CLOUD1_Y - 20) // cloud is moving up, y - coordinate decreases
+//         begin
+//            cloud1_y <= cloud1_y - 1;
+            
+//            if (cloud1_y <= INITIAL_CLOUD1_Y - 20) // can put outside
+//                  cloud1_direction <= 1;
+         
+         
+//         end
+   
+   
+//   end
+
+
+
+// Works (Start of idea):
+
+//     if (cloud1_direction) begin
+//        // Moving cloud1 down
+//        if (cloud1_y < INITIAL_CLOUD1_Y + 9)
+//           cloud1_y <= cloud1_y + 1;
+//        else
+//           cloud1_direction <= 0; // Switch to moving up
+//     end 
+//     else begin
+//        // Moving cloud1 up
+//        if (cloud1_y > INITIAL_CLOUD1_Y - 9)
+//           cloud1_y <= cloud1_y - 1;
+//        else
+//           cloud1_direction <= 1; // Switch to moving down
+//     end
+//   end
