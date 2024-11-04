@@ -1,0 +1,48 @@
+`timescale 1ns / 1ps
+
+
+module random_state_gen(
+    input clk, // input clk of 0.1Hz (a very slow clk)
+    output [1:0] state
+    );
+    
+    
+    reg [5:0] Q = 6'b101101; // better to give a non-zero value for randomness
+     // increase bit size of Q
+//    reg [1:0] state_switcher = 0;
+    
+    assign state = Q[4:3];
+    
+    always @ (posedge clk)
+    begin
+    
+      Q <= {Q[4:0] , ~(Q[5] ^ Q[4])}; 
+
+    end
+    
+    
+    
+endmodule
+
+//    assign state = (state_switcher <= 1) ? Q[1:0] : Q[3:2]; // state always takes the lowest 2 MSB of Q
+    
+//    always @ (posedge clk)
+//    begin
+    
+//      state_switcher <= state_switcher + 1; // 00 --> 01 --> 10 --> 11 --> 00 ....
+      
+//      if (state_switcher == 0) // left shift
+//      Q <= {Q[2:0] , ~(Q[2] ^ Q[3])}; // shift each digit by one place from right to left. 
+//                                   // The LSB takes XNOR (Q[2] , Q[3]) --> can try other digits as well
+                                   
+//      else if (state_switcher == 1) // left shift
+//      Q <= {Q[2:0] , ~(Q[1] ^ Q[3])};
+      
+//      else if (state_switcher == 2) // right shift
+//      Q <= {~(Q[0] ^ Q[1]), Q[3:1]};
+      
+//      else if (state_switcher == 3) // right shift
+//      Q <= {~(Q[0] ^ Q[3]), Q[3:1]};
+      
+    
+//    end
